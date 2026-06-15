@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Haushalts-RPG: Epic Edition</title>
     
-    <!-- App-Icon Einstellungen für den Home-Bildschirm -->
-    <link rel="icon" type="image/png" href="icon.png">
-    <link rel="apple-touch-icon" href="icon.png">
+    <!-- Erweiterte App-Icon Einstellungen für den Home-Bildschirm -->
+    <link rel="icon" type="image/png" sizes="192x192" href="icon.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Haushalt RPG">
@@ -70,7 +71,6 @@
                 <div class="stat-line" style="font-size:18px; color:#aaa;">
                     XP: <span id="player-xp">0</span> / <span id="next-level-xp">100</span>
                 </div>
-                <!-- NEU: Streak-Anzeige beim Spieler -->
                 <div class="stat-line" style="font-size:18px; color:var(--pixel-accent);">
                     🔥 Streak: <span id="player-streak">0</span> Tage <span id="streak-bonus-text" style="color:var(--pixel-green);"></span>
                 </div>
@@ -89,7 +89,6 @@
 
         <!-- TAB: QUESTS -->
         <div id="section-quests" class="list-section active">
-            <!-- NEU: Das Zufallsrad / Daily Wheel Box -->
             <div class="stats-container" style="margin-bottom:15px; border-color:var(--pixel-accent);">
                 <h3>🎲 Das Schicksalsrad</h3>
                 <button class="btn btn-blue" id="wheel-btn" onclick="app.spinWheel()">Zufällige Quest fordern! (2x Gold)</button>
@@ -113,8 +112,6 @@
 
         <!-- TAB: STATS -->
         <div id="section-stats" class="list-section">
-            
-            <!-- NEU: Der monatliche Koop-Dungeon-Boss -->
             <div class="stats-container" style="border: 3px double var(--pixel-red); background:#201111;">
                 <h3 style="color:var(--pixel-red); text-shadow:2px 2px #000;">😈 Monats-Endgegner: Der Kalk-Drache</h3>
                 <div class="pixel-progress-bg" style="border-color:var(--pixel-red);">
@@ -134,12 +131,9 @@
                 </div>
             </div>
 
-            <!-- NEU: Errungenschaften & Trophäen Bereich -->
             <div class="stats-container">
                 <h3>🏆 Eure Errungenschaften</h3>
-                <div id="achievements-list" style="font-size:18px;">
-                    <!-- Wird dynamisch befüllt -->
-                </div>
+                <div id="achievements-list" style="font-size:18px;"></div>
             </div>
 
             <div class="stats-container">
