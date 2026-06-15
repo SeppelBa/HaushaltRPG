@@ -85,12 +85,14 @@
         <div id="section-quests" class="list-section active">
             <div class="stats-container" style="margin-bottom:15px; border-color:var(--pixel-accent);">
                 <h3>🎲 Das Schicksalsrad</h3>
-                <div style="font-size:18px; text-align:center; margin-bottom:10px; color:#aaa;">
-                    Heute noch offen: <span id="wheel-left-count" style="color:var(--pixel-green);">3/3</span> | Rerolls übrig: <span id="wheel-rerolls-count" style="color:var(--pixel-red);">3/3</span>
+                <div style="font-size:16px; text-align:center; margin-bottom:10px; color:#aaa; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    Heute offen: <span id="wheel-left-count" style="color:var(--pixel-green);">3/3</span> | Rerolls: <span id="wheel-rerolls-count" style="color:var(--pixel-red);">3/3</span>
                 </div>
                 <button class="btn btn-blue" id="wheel-btn" onclick="app.spinWheel()">Zufällige Quest fordern! (2x Gold)</button>
                 <div id="wheel-result" style="text-align:center; margin-top:5px; font-weight:bold; color:var(--pixel-accent);"></div>
             </div>
+
+            <input type="text" id="quest-search" placeholder="🔍 Quest suchen..." oninput="app.handleSearch()" style="margin-bottom: 12px;">
 
             <div class="filter-bar">
                 <button class="btn filter-btn active" id="f-all" onclick="app.filterQuests('all')">Alle</button>
