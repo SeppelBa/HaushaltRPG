@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Haushalts-RPG: Cloud Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="game-container">
+    <div id="toast">QUEST ERLEDIGT!</div>
+
+    <!-- SCREEN 1: LOGIN / REGISTRIERUNG -->
+    <div id="auth-screen" class="screen active">
+        <h1>Haushalts-RPG</h1>
+        <div class="pixel-box">
+            <h2>Anmeldung / Registrierung</h2>
+            <input type="email" id="auth-email" placeholder="E-Mail-Adresse...">
+            <input type="password" id="auth-password" placeholder="Passwort...">
+            <button class="btn btn-green" onclick="app.handleAuth('login')">Einloggen</button>
+            <button class="btn" onclick="app.handleAuth('register')">Registrieren</button>
+        </div>
+    </div>
+
+    <!-- SCREEN 2: RAUMAUSWAHL -->
+    <div id="room-screen" class="screen">
+        <h1>Raum-Zentrale</h1>
+        <div class="pixel-box">
+            <h2>Einem Raum beitreten oder erstellen</h2>
+            <input type="text" id="room-id" placeholder="Raum-ID (z.B. UnsereWohnung)">
+            <input type="password" id="room-password" placeholder="Raum-Passwort...">
+            <button class="btn btn-blue" onclick="app.handleRoom('join')">Raum beitreten</button>
+            <button class="btn btn-green" onclick="app.handleRoom('create')">Raum erstellen</button>
+            <button class="btn btn-red" style="margin-top:20px;" onclick="app.logout()">Abmelden</button>
+        </div>
+    </div>
+
+    <!-- SCREEN 3: CHARAKTERAUSWAHL -->
+    <div id="char-screen" class="screen">
+        <h1>Wähle deinen Helden</h1>
+        <input type="text" id="player-name-input" placeholder="Dein Ingame-Name..." maxlength="12">
+        <div class="avatar-grid" id="avatar-grid"></div>
+        <button class="btn btn-green" style="width: 100%;" onclick="app.saveCharacter()">Spiel betreten</button>
+    </div>
+
+    <!-- SCREEN 4: HAUPTSPIEL -->
+    <div id="main-game" class="screen">
+        <div class="header-row">
+            <h1>HAUSHALTS-RPG</h1>
+            <!-- Geheimes Admin-Icon oben rechts -->
+            <button class="admin-trigger-btn" onclick="app.switchTab('admin')">⚙️</button>
+        </div>
+        
+        <div class="player-status">
+            <div id="display-avatar" class="active-avatar">🧙‍♂️</div>
+            <div class="stats-summary">
+                <div class="stat-line"><span id="display-name" style="color:var(--pixel-accent);">Held</span> <span>Lvl <span id="player-level">1</span></span></div>
+                <div class="stat-line" style="font-size:18px; color:#aaa;">XP: <span id="player-xp">0</span> / <span id="next-level-xp">100</span></div>
+                <div class="stat-line"><span class="coin-icon">🪙 Goldmünzen:</span> <span id="player-gold" style="color:var(--pixel-accent); font-weight:bold;">0</span></div>
+            </div>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="btn tab-btn active" id="tab-quests" onclick="app.switchTab('quests')">📜 Quests</button>
+            <button class="btn tab-btn" id="tab-shop" onclick="app.switchTab('shop')">🪙 Shop</button>
+            <button class="btn tab-btn" id="tab-stats" onclick="app.switchTab('stats')">📊 Stats</button>
+        </div>
+
+        <!-- TAB: QUESTS -->
+        <div id="section-quests" class="list-section active">
+            <div class="filter-bar">
+                <button class="btn filter-btn active" id="f-all" onclick="app.filterQuests('all')">Alle</button>
+                <button class="btn filter-btn" id="f-mini" onclick="app.filterQuests('mini')">Mini</button>
+                <button class="btn filter-btn" id="f-woche" onclick="app.filterQuests('woche')">Woche</button>
+                <button class="btn filter-btn" id="f-monat" onclick="app.filterQuests('monat')">Monat</button>
+            </div>
+            <div id="quest-list"></div>
+        </div>
+
+        <!-- TAB: SHOP -->
+        <div id="section-shop" class="list-section">
+            <h2>Belohnungen freischalten</h2>
+            <div id="shop-list"></div>
+        </div>
+
+        <!-- TAB: STATS -->
+        <div id="section-stats" class="list-section">
+            <h2>Wohnungs-Statistiken</h2>
+            <div class="stats-container">
+                <h3>Monatsziel Fortschritt</h3>
+                <div class="pixel-progress-bg">
+                    <div id="progress-goal-fill" class="pixel-progress-fill"></div>
+                    <div id="progress-goal-text" class="progress-text">0 Quests geschafft</div>
+                </div>
+            </div>
+            <div class="stats-container">
+                <h3>Erledigte Quest-Klassen</h3>
+                <div class="chart-row">
+                    <div class="chart-label"><span>Mini-Quests</span><span id="stat-count-mini">0</span></div>
+                    <div class="chart-bar-bg"><div id="bar-mini" class="chart-bar-fill" style="background:var(--pixel-green);"></div></div>
+                </div>
+                <div class="chart-row">
+                    <div class="chart-label"><span>Wochen-Quests</span><span id="stat-count-woche">0</span></div>
+                    <div class="chart-bar-bg"><div id="bar-woche" class="chart-bar-fill" style="background:var(--pixel-blue);"></div></div>
+                </div>
+                <div class="chart-row">
+                    <div class="chart-label"><span>Monats-Quests</span><span id="stat-count-monat">0</span></div>
+                    <div class="chart-bar-bg"><div id="bar-monat" class="chart-bar-fill" style="background:var(--pixel-accent);"></div></div>
+                </div>
+            </div>
+            <div class="stats-container">
+                <h3>Macht-Verhältnis in der Wohnung</h3>
+                <div id="vs-label-container" class="chart-label"></div>
+                <div class="vs-container">
+                    <div id="vs-p1" class="vs-player1">50%</div>
+                    <div id="vs-p2" class="vs-player2">50%</div>
+                </div>
+            </div>
+            <button class="btn btn-red" style="width:100%; margin-top:20px;" onclick="app.leaveRoom()">Raum verlassen</button>
+        </div>
+
+        <!-- TAB: GEHEIMES ADMIN MENÜ -->
+        <div id="section-admin" class="list-section">
+            <h2>🛠️ Admin Geheimmenü</h2>
+            
+            <div class="stats-container">
+                <h3>Neue Quest hinzufügen</h3>
+                <input type="text" id="admin-q-title" placeholder="Quest Name (z.B. Keller fegen)...">
+                <input type="text" id="admin-q-icon" placeholder="Emoji Icon (z.B. 🧹)...">
+                <select id="admin-q-type">
+                    <option value="mini">Mini-Quest</option>
+                    <option value="woche">Wochen-Quest</option>
+                    <option value="monat">Monats-Quest</option>
+                </select>
+                <input type="number" id="admin-q-reward" placeholder="Belohnung (EP & Münzen)...">
+                <button class="btn btn-green" style="width:100%;" onclick="app.adminAddQuest()">Quest in Cloud speichern</button>
+            </div>
+
+            <div class="stats-container" style="margin-top:20px;">
+                <h3>Neues Shop-Item hinzufügen</h3>
+                <input type="text" id="admin-s-title" placeholder="Belohnung Name (z.B. Kinoabend)...">
+                <input type="text" id="admin-s-icon" placeholder="Emoji Icon (z.B. 🎬)...">
+                <input type="number" id="admin-s-cost" placeholder="Kosten in Münzen...">
+                <button class="btn btn-green" style="width:100%;" onclick="app.adminAddShopItem()">Shop-Item in Cloud speichern</button>
+            </div>
+            
+            <button class="btn" style="width:100%; margin-top:10px;" onclick="app.switchTab('quests')">Zurück zu den Quests</button>
+        </div>
+    </div>
+</div>
+
+<!-- Firebase SDKs laden via CDN -->
+<script type="module" src="app.js"></script>
+</body>
+</html>
