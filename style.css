@@ -1,0 +1,160 @@
+:root {
+    --bg-color: #121216;
+    --container-bg: #1a1a24;
+    --border-color: #3a3a50;
+    --pixel-accent: #ffb800;
+    --pixel-green: #00e676;
+    --pixel-blue: #00b0ff;
+    --pixel-red: #ff5252;
+    --pixel-purple: #b552ff;
+    --text-color: #e0e0e6;
+    --disabled-bg: #1e1e26;
+    --disabled-border: #2a2a35;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'VT323', monospace;
+    font-size: 24px;
+    image-rendering: pixelated;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.game-container {
+    width: 100%;
+    max-width: 500px;
+    background: var(--container-bg);
+    border: 4px solid #000;
+    box-shadow: inset -4px -4px 0px #000, inset 4px 4px 0px #5f5f7a;
+    padding: 15px;
+    min-height: 93vh;
+    position: relative;
+}
+
+.screen { display: none; }
+.screen.active { display: block; }
+
+h1, h2, h3 {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 14px;
+    text-align: center;
+    color: var(--pixel-accent);
+    text-transform: uppercase;
+    text-shadow: 2px 2px #000;
+    margin-bottom: 15px;
+}
+
+h2 { font-size: 12px; color: var(--pixel-blue); margin-top: 10px; }
+
+.header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.header-row h1 { margin-bottom: 0; flex-grow: 1; text-align: center; }
+
+.admin-trigger-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    user-select: none;
+}
+
+input, select {
+    background: #000;
+    border: 3px solid var(--border-color);
+    color: #fff;
+    padding: 8px;
+    text-align: center;
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+.pixel-box {
+    background: #222230;
+    border: 3px solid #000;
+    padding: 15px;
+    margin-top: 20px;
+}
+
+.btn {
+    display: block;
+    width: 100%;
+    border: 4px solid #000;
+    padding: 6px 12px;
+    background: #4a4a6a;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: inset -4px -4px 0px #222, inset 4px 4px 0px #888;
+    text-align: center;
+    user-select: none;
+    margin-bottom: 10px;
+}
+.btn:active {
+    box-shadow: inset 4px 4px 0px #222, inset -4px -4px 0px #888;
+}
+.btn-green { background: #007e33; }
+.btn-blue { background: #006699; }
+.btn-red { background: #cc0000; }
+.disabled-btn { background: #444 !important; color: #888 !important; border-color: #222 !important; box-shadow: none !important; cursor: not-allowed; }
+
+.avatar-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0; }
+.avatar-box { border: 4px solid var(--border-color); background: #282838; padding: 10px; text-align: center; cursor: pointer; }
+.avatar-box.selected { border-color: var(--pixel-accent); background: #383850; }
+.avatar-img { font-size: 40px; display: block; }
+.avatar-name { font-size: 18px; }
+
+.player-status { background: #222230; border: 3px solid #000; padding: 10px; margin-bottom: 15px; display: flex; align-items: center; gap: 15px; }
+.active-avatar { font-size: 50px; background: #333; padding: 5px; border: 2px solid #555; }
+.stats-summary { flex-grow: 1; }
+.stat-line { display: flex; justify-content: space-between; font-size: 22px; }
+.coin-icon { color: var(--pixel-accent); }
+
+.nav-tabs { display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 4px solid #000; }
+.tab-btn { flex: 1; margin: 0 1px; font-size: 18px; }
+.tab-btn.active { background: var(--pixel-blue); color: #000; }
+
+.list-section { display: none; }
+.list-section.active { display: block; }
+
+.card { background: #222230; border: 3px solid var(--border-color); padding: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 2px 2px 0px #000; }
+.card.completed-quest { background: var(--disabled-bg); border-color: var(--disabled-border); box-shadow: none; opacity: 0.6; }
+.card-info { max-width: 75%; }
+.card-title { font-size: 22px; font-weight: bold; }
+.card.completed-quest .card-title { text-decoration: line-through; color: #777; }
+.card-reward { font-size: 18px; color: var(--pixel-green); }
+.cooldown-text { font-size: 16px; color: var(--pixel-accent); display: block; }
+.card-cost { font-size: 18px; color: var(--pixel-red); }
+.card-action { min-width: 90px; text-align: right; }
+
+.filter-bar { display: flex; gap: 5px; margin-bottom: 10px; justify-content: center; }
+.filter-btn { font-size: 16px; padding: 2px 6px; background: #333; }
+.filter-btn.active { background: var(--pixel-accent); color: #000; }
+
+.stats-container { background: #222230; border: 3px solid #000; padding: 15px; margin-bottom: 15px; }
+.pixel-progress-bg { background: #000; border: 2px solid #fff; height: 24px; width: 100%; margin: 10px 0; position: relative; }
+.pixel-progress-fill { background: var(--pixel-green); height: 100%; width: 0%; transition: width 0.4s; }
+.progress-text { position: absolute; width: 100%; text-align: center; font-size: 18px; color: #fff; top: -2px; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000; }
+
+.chart-row { margin: 12px 0; }
+.chart-label { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 18px; }
+.chart-bar-bg { background: #111; height: 16px; width: 100%; border: 2px solid #444; }
+.chart-bar-fill { height: 100%; width: 0%; transition: width 0.4s; }
+
+.vs-container { display: flex; height: 30px; border: 3px solid #000; margin-top: 10px; overflow: hidden; }
+.vs-player1 { background: var(--pixel-blue); height: 100%; width: 50%; transition: width 0.4s; display: flex; align-items: center; padding-left: 5px; font-size: 16px; color: #000; font-weight: bold; }
+.vs-player2 { background: var(--pixel-purple); height: 100%; width: 50%; transition: width 0.4s; display: flex; align-items: center; justify-content: flex-end; padding-right: 5px; font-size: 16px; color: #000; font-weight: bold; }
+
+#toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #00e676; color: #000; border: 3px solid #000; padding: 10px; font-family: 'Press Start 2P', cursive; font-size: 10px; display: none; z-index: 100; box-shadow: 4px 4px 0px #000; }
