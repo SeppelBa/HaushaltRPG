@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Haushalts-RPG: Epic Edition</title>
+    <title>Haushalts-RPG: Ultimate Edition</title>
     
-    <!-- Erweiterte App-Icon Einstellungen für den Home-Bildschirm -->
     <link rel="icon" type="image/png" sizes="192x192" href="icon.png">
     <link rel="icon" type="image/png" sizes="512x512" href="icon.png">
     <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
@@ -21,7 +20,6 @@
 <div class="game-container">
     <div id="toast">QUEST ERLEDIGT!</div>
 
-    <!-- SCREEN 1: LOGIN -->
     <div id="auth-screen" class="screen active">
         <h1>Haushalts-RPG</h1>
         <div class="pixel-box">
@@ -33,7 +31,6 @@
         </div>
     </div>
 
-    <!-- SCREEN 2: RAUMAUSWAHL -->
     <div id="room-screen" class="screen">
         <h1>Raum-Zentrale</h1>
         <div class="pixel-box">
@@ -46,7 +43,6 @@
         </div>
     </div>
 
-    <!-- SCREEN 3: CHARAKTERAUSWAHL -->
     <div id="char-screen" class="screen">
         <h1>Wähle deinen Helden</h1>
         <input type="text" id="player-name-input" placeholder="Dein Ingame-Name..." maxlength="12">
@@ -54,7 +50,6 @@
         <button class="btn btn-green" style="width: 100%;" onclick="app.saveCharacter()">Spiel betreten</button>
     </div>
 
-    <!-- SCREEN 4: HAUPTSPIEL -->
     <div id="main-game" class="screen">
         <div class="header-row">
             <h1>HAUSHALTS-RPG</h1>
@@ -87,12 +82,14 @@
             <button class="btn tab-btn" id="tab-stats" onclick="app.switchTab('stats')">📊 Stats</button>
         </div>
 
-        <!-- TAB: QUESTS -->
         <div id="section-quests" class="list-section active">
             <div class="stats-container" style="margin-bottom:15px; border-color:var(--pixel-accent);">
                 <h3>🎲 Das Schicksalsrad</h3>
+                <div style="font-size:18px; text-align:center; margin-bottom:10px; color:#aaa;">
+                    Heute noch offen: <span id="wheel-left-count" style="color:var(--pixel-green);">3/3</span> | Rerolls übrig: <span id="wheel-rerolls-count" style="color:var(--pixel-red);">3/3</span>
+                </div>
                 <button class="btn btn-blue" id="wheel-btn" onclick="app.spinWheel()">Zufällige Quest fordern! (2x Gold)</button>
-                <div id="wheel-result" style="text-align:center; margin-top:5px; font-weight:bold; color:var(--pixel-accent); font-size:22px;"></div>
+                <div id="wheel-result" style="text-align:center; margin-top:5px; font-weight:bold; color:var(--pixel-accent);"></div>
             </div>
 
             <div class="filter-bar">
@@ -104,22 +101,25 @@
             <div id="quest-list"></div>
         </div>
 
-        <!-- TAB: SHOP -->
         <div id="section-shop" class="list-section">
             <h2>Belohnungen freischalten</h2>
             <div id="shop-list"></div>
         </div>
 
-        <!-- TAB: STATS -->
         <div id="section-stats" class="list-section">
+            
+            <div class="stats-container" style="border: 3px solid var(--pixel-blue);">
+                <h3 style="color:var(--pixel-blue);">🎒 Offene Gutscheine & Belohnungen</h3>
+                <div id="inventory-list" style="font-size:18px; margin-top:10px;">
+                    <div style="color:#777; text-align:center;">Keine offenen Gutscheine vorrätig.</div>
+                </div>
+            </div>
+
             <div class="stats-container" style="border: 3px double var(--pixel-red); background:#201111;">
                 <h3 style="color:var(--pixel-red); text-shadow:2px 2px #000;">😈 Monats-Endgegner: Der Kalk-Drache</h3>
                 <div class="pixel-progress-bg" style="border-color:var(--pixel-red);">
                     <div id="boss-hp-fill" class="pixel-progress-fill" style="background:var(--pixel-red); width: 100%;"></div>
                     <div id="boss-hp-text" class="progress-text">1000 / 1000 HP</div>
-                </div>
-                <div style="font-size:16px; text-align:center; color:#aaa; line-height:1.2;">
-                    Besiegt das Monster gemeinsam durch Erledigen von Quests vor Monatsende für einen dicken Teambonus!
                 </div>
             </div>
 
@@ -160,10 +160,10 @@
                     <div id="vs-p2" class="vs-player2">50%</div>
                 </div>
             </div>
-            <button class="btn btn-red" style="width:100%; margin-top:20px;" onclick="app.leaveRoom()">Raum verlassen</button>
+            
+            <button class="btn btn-red" style="width:100%; margin-top:20px;" onclick="app.logout()">Komplett abmelden</button>
         </div>
 
-        <!-- TAB: GEHEIMES ADMIN MENÜ -->
         <div id="section-admin" class="list-section">
             <h2>🛠️ Admin Geheimmenü</h2>
             <div class="stats-container">
