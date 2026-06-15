@@ -23,7 +23,6 @@ let currentFilter = "all";
 let localUid = null;
 let activeWheelQuestId = null;
 
-// Audio Synthesizer
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 function playSound(type) {
     const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
@@ -43,8 +42,9 @@ function playSound(type) {
     }
 }
 
-// 70 Aufgaben und 30 Shop-Items (Kompakt gelassen, baut die volle Liste beim Erstellen)
+// MASSIV ERWEITERTER CLOUD-KATALOG (90 Quests & 50 Shop-Items)
 const defaultQuests = {
+    // --- MINI-QUESTS (Jetzt 40 Stück) ---
     "q1": { id: "q1", title: "Müll runterbringen", type: "mini", reward: 4, icon: "🗑️" },
     "q2": { id: "q2", title: "Spülmaschine ausräumen", type: "mini", reward: 8, icon: "🍽️" },
     "q3": { id: "q3", title: "Spülmaschine einräumen", type: "mini", reward: 4, icon: "🥣" },
@@ -75,51 +75,74 @@ const defaultQuests = {
     "q28": { id: "q28", title: "Spiegel kurz abwischen", type: "mini", reward: 3, icon: "🪞" },
     "q29": { id: "q29", title: "Fernseher abstauben", type: "mini", reward: 4, icon: "📺" },
     "q30": { id: "q30", title: "Wassernapf frisch auswaschen", type: "mini", reward: 3, icon: "🐈" },
-    // Wochenquests
-    "q31": { id: "q31", title: "Wohnung komplett staubsaugen", type: "woche", reward: 25, icon: "🧹", completed: false },
-    "q32": { id: "q32", title: "Badezimmer komplett putzen", type: "woche", reward: 35, icon: "🚽", completed: false },
-    "q33": { id: "q33", title: "Böden wischen (Küche/Bad)", type: "woche", reward: 30, icon: "🍳", completed: false },
-    "q34": { id: "q34", title: "Wäsche waschen & aufhängen", type: "woche", reward: 25, icon: "👕", completed: false },
-    "q35": { id: "q35", title: "Wäsche falten & wegräumen", type: "woche", reward: 20, icon: "🧺", completed: false },
-    "q36": { id: "q36", title: "Alle freien Oberflächen abwischen", type: "woche", reward: 20, icon: "🪶", completed: false },
-    "q37": { id: "q37", title: "Altglas & Pfand wegbringen", type: "woche", reward: 15, icon: "🍾", completed: false },
-    "q38": { id: "q38", title: "Haupt-Mülleimer auswischen", type: "woche", reward: 15, icon: "🗑️", completed: false },
-    "q39": { id: "q39", title: "Großen Flurspiegel putzen", type: "woche", reward: 12, icon: "🪞", completed: false },
-    "q40": { id: "q40", title: "Küchenarbeitsplatte putzen", type: "woche", reward: 15, icon: "🔪", completed: false },
-    "q41": { id: "q41", title: "Katzenklo leeren & auswaschen", type: "woche", reward: 25, icon: "🐈", completed: false },
-    "q42": { id: "q42", title: "Badematten waschen/schütteln", type: "woche", reward: 15, icon: "🧼", completed: false },
-    "q43": { id: "q43", title: "Mikrowelle von innen reinigen", type: "woche", reward: 18, icon: "📻", completed: false },
-    "q44": { id: "q44", title: "Küchenfronten abwischen", type: "woche", reward: 20, icon: "🚪", completed: false },
-    "q45": { id: "q46", title: "Duschkabine entkalken", type: "woche", reward: 22, icon: "🚿", completed: false },
-    "q46": { id: "q45", title: "Brotkasten auswischen", type: "woche", reward: 10, icon: "🍞", completed: false },
-    "q47": { id: "q47", title: "Teppiche gründlich absaugen", type: "woche", reward: 18, icon: "🧶", completed: false },
-    "q48": { id: "q48", title: "Handtücher einsammeln & kochen", type: "woche", reward: 15, icon: "🧺", completed: false },
-    "q49": { id: "q49", title: "Wohnzimmertisch polieren", type: "woche", reward: 12, icon: "🪵", completed: false },
-    "q50": { id: "q50", title: "Einkauf planen & Kühlschrank prüfen", type: "woche", reward: 10, icon: "📝", completed: false },
-    // Monatsquests
-    "q51": { id: "q51", title: "Bettwäsche wechseln & waschen", type: "monat", reward: 40, icon: "🛏️", completed: false },
-    "q52": { id: "q52", title: "Kühlschrank komplett auswischen", type: "monat", reward: 60, icon: "🧊", completed: false },
-    "q53": { id: "q53", title: "Backofen tiefenreinigen", type: "monat", reward: 80, icon: "🔥", completed: false },
-    "q54": { id: "q54", title: "Fenster putzen (Wohnbereich)", type: "monat", reward: 45, icon: "🖼️", completed: false },
-    "q55": { id: "q55", title: "Fenster putzen (Schlafbereich)", type: "monat", reward: 45, icon: "🖼️", completed: false },
-    "q56": { id: "q56", title: "Kaffeemaschine entkalken", type: "monat", reward: 30, icon: "☕", completed: false },
-    "q57": { id: "q57", title: "Spülmaschine Tiefenpflege durchführen", type: "monat", reward: 35, icon: "🧼", completed: false },
-    "q58": { id: "q58", title: "Auto komplett aussaugen", type: "monat", reward: 70, icon: "🚗", completed: false },
-    "q59": { id: "q59", title: "Auto-Innenscheiben putzen", type: "monat", reward: 25, icon: "🧽", completed: false },
-    "q60": { id: "q60", title: "Balkon / Terrasse gründlich fegen", type: "monat", reward: 40, icon: "🪵", completed: false },
-    "q61": { id: "q61", title: "Abflüsse reinigen & spülen", type: "monat", reward: 50, icon: "💧", completed: false },
-    "q62": { id: "q62", title: "Matratzen absaugen & wenden", type: "monat", reward: 35, icon: "🛏️", completed: false },
-    "q63": { id: "q63", title: "Alle Klinken desinfizieren", type: "monat", reward: 30, icon: "🧽", completed: false },
-    "q64": { id: "q64", title: "Waschmaschine Flusensieb säubern", type: "monat", reward: 45, icon: "🧼", completed: false },
-    "q65": { id: "q65", title: "Heizkörper entstauben", type: "monat", reward: 30, icon: "♨️", completed: false },
-    "q66": { id: "q66", title: "Fußleisten in der Wohnung wischen", type: "monat", reward: 55, icon: "🧹", completed: false },
-    "q67": { id: "q67", title: "Dunstabzugshaube Filter reinigen", type: "monat", reward: 50, icon: "💨", completed: false },
-    "q68": { id: "q68", title: "Duschvorhang waschen", type: "monat", reward: 35, icon: "🚿", completed: false },
-    "q69": { id: "q69", title: "Vorratsschrank auswischen & MHD", type: "monat", reward: 45, icon: "🥫", completed: false },
-    "q70": { id: "q70", title: "Kleiderschrank ausmisten & ordnen", type: "monat", reward: 60, icon: "👔", completed: false }
+    "q31": { id: "q31", title: "Badezimmerspiegel von Zahnpastaflecken befreien", type: "mini", reward: 2, icon: "🪞" },
+    "q32": { id: "q32", title: "Verstreute Zeitschriften/Kataloge stapeln", type: "mini", reward: 2, icon: "📚" },
+    "q33": { id: "q33", title: "Arbeitsplatte nach dem Kochen trockenwischen", type: "mini", reward: 3, icon: "🧽" },
+    "q34": { id: "q34", title: "Leere Flaschen auf der Arbeitsplatte einsammeln", type: "mini", reward: 2, icon: "🍼" },
+    "q35": { id: "q35", title: "Einen vollen Wäscheständer leerräumen", type: "mini", reward: 5, icon: "🧺" },
+    "q36": { id: "q36", title: "Zwei alte Prospekte/Kassenzettel wegwerfen", type: "mini", reward: 1, icon: "🧾" },
+    "q37": { id: "q37", title: "Haare aus der Haarbürste entfernen", type: "mini", reward: 2, icon: "🪮" },
+    "q38": { id: "q38", title: "Gewürzregal kurz gerade rücken", type: "mini", reward: 3, icon: "🧂" },
+    "q39": { id: "q39", title: "Katzenspielzeug in die Box werfen", type: "mini", reward: 2, icon: "🐭" },
+    "q40": { id: "q40", title: "Fensterbrett kurz abpusten/wischen", type: "mini", reward: 2, icon: "🪴" },
+
+    // --- WOCHEN-QUESTS (Jetzt 25 Stück) ---
+    "q41": { id: "q41", title: "Wohnung komplett staubsaugen", type: "woche", reward: 25, icon: "🧹", completed: false },
+    "q42": { id: "q42", title: "Badezimmer komplett putzen", type: "woche", reward: 35, icon: "🚽", completed: false },
+    "q43": { id: "q43", title: "Böden wischen (Küche/Bad)", type: "woche", reward: 30, icon: "🍳", completed: false },
+    "q44": { id: "q44", title: "Wäsche waschen & aufhängen", type: "woche", reward: 25, icon: "👕", completed: false },
+    "q45": { id: "q45", title: "Wäsche falten & wegräumen", type: "woche", reward: 20, icon: "🧺", completed: false },
+    "q46": { id: "q46", title: "Alle freien Oberflächen abwischen", type: "woche", reward: 20, icon: "🪶", completed: false },
+    "q47": { id: "q47", title: "Altglas & Pfand wegbringen", type: "woche", reward: 15, icon: "🍾", completed: false },
+    "q48": { id: "q48", title: "Haupt-Mülleimer auswischen", type: "woche", reward: 15, icon: "🗑️", completed: false },
+    "q49": { id: "q49", title: "Großen Flurspiegel putzen", type: "woche", reward: 12, icon: "🪞", completed: false },
+    "q50": { id: "q50", title: "Küchenarbeitsplatte putzen", type: "woche", reward: 15, icon: "🔪", completed: false },
+    "q51": { id: "q51", title: "Katzenklo leeren & auswaschen", type: "woche", reward: 25, icon: "🐈", completed: false },
+    "q52": { id: "q52", title: "Badematten waschen/schütteln", type: "woche", reward: 15, icon: "🧼", completed: false },
+    "q53": { id: "q53", title: "Mikrowelle von innen reinigen", type: "woche", reward: 18, icon: "📻", completed: false },
+    "q54": { id: "q54", title: "Küchenfronten abwischen", type: "woche", reward: 20, icon: "🚪", completed: false },
+    "q55": { id: "q55", title: "Duschkabine entkalken", type: "woche", reward: 22, icon: "🚿", completed: false },
+    "q56": { id: "q56", title: "Brotkasten auswischen", type: "woche", reward: 10, icon: "🍞", completed: false },
+    "q57": { id: "q57", title: "Teppiche gründlich absaugen", type: "woche", reward: 18, icon: "🧶", completed: false },
+    "q58": { id: "q58", title: "Handtücher einsammeln & kochen", type: "woche", reward: 15, icon: "🧺", completed: false },
+    "q59": { id: "q59", title: "Wohnzimmertisch polieren", type: "woche", reward: 12, icon: "🪵", completed: false },
+    "q60": { id: "q60", title: "Einkauf planen & Kühlschrank prüfen", type: "woche", reward: 10, icon: "📝", completed: false },
+    "q61": { id: "q61", title: "Wasserkocher entkalken (Zitronensäure/Essig)", type: "woche", reward: 12, icon: "🫖", completed: false },
+    "q62": { id: "q62", title: "Wohnzimmerböden gründlich saugen", type: "woche", reward: 20, icon: "🧹", completed: false },
+    "q63": { id: "q63", title: "Schlafzimmer entstauben (Nachttische/Kommode)", type: "woche", reward: 15, icon: "🪶", completed: false },
+    "q64": { id: "q64", title: "Überreife Lebensmittel im Gemüsefach aussortieren", type: "woche", reward: 12, icon: "🥦", completed: false },
+    "q65": { id: "q65", title: "Alle Seifenspender säubern & auffüllen", type: "woche", reward: 10, icon: "🧴", completed: false },
+
+    // --- MONATS-QUESTS (Jetzt 25 Stück) ---
+    "q66": { id: "q66", title: "Bettwäsche wechseln & waschen", type: "monat", reward: 40, icon: "🛏️", completed: false },
+    "q67": { id: "q67", title: "Kühlschrank komplett auswischen", type: "monat", reward: 60, icon: "🧊", completed: false },
+    "q68": { id: "q68", title: "Backofen tiefenreinigen", type: "monat", reward: 80, icon: "🔥", completed: false },
+    "q69": { id: "q69", title: "Fenster putzen (Wohnbereich)", type: "monat", reward: 45, icon: "🖼️", completed: false },
+    "q70": { id: "q70", title: "Fenster putzen (Schlafbereich)", type: "monat", reward: 45, icon: "🖼️", completed: false },
+    "q71": { id: "q71", title: "Kaffeemaschine entkalken", type: "monat", reward: 30, icon: "☕", completed: false },
+    "q72": { id: "q72", title: "Spülmaschine Tiefenpflege durchführen", type: "monat", reward: 35, icon: "🧼", completed: false },
+    "q73": { id: "q73", title: "Auto komplett aussaugen", type: "monat", reward: 70, icon: "🚗", completed: false },
+    "q74": { id: "q74", title: "Auto-Innenscheiben putzen", type: "monat", reward: 25, icon: "🧽", completed: false },
+    "q75": { id: "q75", title: "Balkon / Terrasse gründlich fegen", type: "monat", reward: 40, icon: "🪵", completed: false },
+    "q76": { id: "q76", title: "Abflüsse reinigen & spülen", type: "monat", reward: 50, icon: "💧", completed: false },
+    "q77": { id: "q77", title: "Matratzen absaugen & wenden", type: "monat", reward: 35, icon: "🛏️", completed: false },
+    "q78": { id: "q78", title: "Alle Klinken desinfizieren", type: "monat", reward: 30, icon: "🧽", completed: false },
+    "q79": { id: "q79", title: "Waschmaschine Flusensieb säubern", type: "monat", reward: 45, icon: "🧼", completed: false },
+    "q80": { id: "q80", title: "Heizkörper entstauben", type: "monat", reward: 30, icon: "♨️", completed: false },
+    "q81": { id: "q81", title: "Fußleisten in der Wohnung wischen", type: "monat", reward: 55, icon: "🧹", completed: false },
+    "q82": { id: "q82", title: "Dunstabzugshaube Filter reinigen", type: "monat", reward: 50, icon: "💨", completed: false },
+    "q83": { id: "q83", title: "Duschvorhang waschen", type: "monat", reward: 35, icon: "🚿", completed: false },
+    "q84": { id: "q84", title: "Vorratsschrank auswischen & MHD", type: "monat", reward: 45, icon: "🥫", completed: false },
+    "q85": { id: "q85", title: "Kleiderschrank ausmisten & ordnen", type: "monat", reward: 60, icon: "👔", completed: false },
+    "q86": { id: "q86", title: "Spiegelschrank im Bad komplett ausräumen & wischen", type: "monat", reward: 40, icon: "🧴", completed: false },
+    "q87": { id: "q87", title: "Lampenschirme & Leuchtmittel entstauben", type: "monat", reward: 35, icon: "💡", completed: false },
+    "q88": { id: "q88", title: "Unter dem Sofa & schweren Möbeln staubsaugen", type: "monat", reward: 50, icon: "🛋️", completed: false },
+    "q89": { id: "q89", title: "Wohnungstür von innen und außen abwischen", type: "monat", reward: 30, icon: "🚪", completed: false },
+    "q90": { id: "q90", title: "Kellerraum fegen / Ordnung herstellen", type: "monat", reward: 65, icon: "📦", completed: false }
 };
 
 const defaultShop = {
+    // --- KLEINE GEFALLEN (Jetzt 15 Stück) ---
     "s1": { id: "s1", title: "Snack ans Sofa gebracht kriegen", cost: 40, icon: "🍿" },
     "s2": { id: "s2", title: "1x Kaffee fertig ans Bett gebracht", cost: 50, icon: "☕" },
     "s3": { id: "s3", title: "Joker: Eine Mini-Quest sofort abgeben", cost: 60, icon: "🃏" },
@@ -130,26 +153,50 @@ const defaultShop = {
     "s8": { id: "s8", title: "Der andere mixt dir ein Getränk", cost: 55, icon: "🍹" },
     "s9": { id: "s9", title: "Der andere holt das Ladekabel", cost: 25, icon: "🔌" },
     "s10": { id: "s10", title: "Ungestörtes Schaumbad nehmen", cost: 50, icon: "🛁" },
-    "s11": { id: "s11", title: "1 Abend freie Filmwahl", cost: 90, icon: "🎬" },
-    "s12": { id: "s12", title: "1 Tag kein Spülmaschinendienst", cost: 120, icon: "🍽️" },
-    "s13": { id: "s13", title: "10 Minuten Fußmassage beim Streamen", cost: 150, icon: "🦶" },
-    "s14": { id: "s14", title: "15 Minuten Rückenmassage", cost: 200, icon: "💆‍♂️" },
-    "s15": { id: "s15", title: "Wochenend-Essen bestellen bestimmen", cost: 100, icon: "🍕" },
-    "s16": { id: "s16", title: "Spieleabend-Wahl (Du bestimmst)", cost: 80, icon: "🎲" },
-    "s17": { id: "s17", title: "Der andere bringt den Müll weg", cost: 65, icon: "🗑️" },
-    "s18": { id: "s18", title: "Beim nächsten Streit 'Recht haben'", cost: 150, icon: "⚖️" },
-    "s19": { id: "s19", title: "Aufwendiges Lieblings-Frühstück gekocht kriegen", cost: 110, icon: "🥞" },
-    "s20": { id: "s20", title: "1 Tag komplett haushaltsfrei", cost: 180, icon: "🛌" },
-    "s21": { id: "s21", title: "Wochenende ungestört ausschlafen", cost: 250, icon: "💤" },
-    "s22": { id: "s22", title: "3-Gänge-Lieblingsessen gekocht kriegen", cost: 350, icon: "🍔" },
-    "s23": { id: "s23", title: "Der andere macht Wocheneinkauf allein", cost: 400, icon: "🛒" },
-    "s24": { id: "s24", title: "Der andere putzt das Bad allein", cost: 300, icon: "🧼" },
-    "s25": { id: "s25", title: "Der andere bügelt deine Wäsche", cost: 350, icon: "👔" },
-    "s26": { id: "s26", title: "45 Minuten Wellness-Massage", cost: 500, icon: "🧴" },
-    "s27": { id: "s27", title: "Der andere reinigt das Auto komplett", cost: 450, icon: "🚗" },
-    "s28": { id: "s28", title: "Komplett bezahltes Überraschungs-Date", cost: 600, icon: "🌹" },
-    "s29": { id: "s29", title: "Der andere übernimmt Wochenaufgabe", cost: 280, icon: "📝" },
-    "s30": { id: "s30", title: "LEGENDÄR: Ein ganzes Verwöhn-Wochenende!", cost: 1000, icon: "👑" }
+    "s11": { id: "s11", title: "Der andere schüttelt deine Bettdecke auf", cost: 20, icon: "🛏️" },
+    "s12": { id: "s12", title: "Gutschein: Wärmflasche/Kirschkernkissen gemacht kriegen", cost: 35, icon: "🔥" },
+    "s13": { id: "s13", title: "Der andere lüftet das Zimmer auf Wunsch", cost: 15, icon: "🪟" },
+    "s14": { id: "s14", title: "Der andere bringt dir ein Glas kaltes Wasser", cost: 15, icon: "🥛" },
+    "s15": { id: "s15", title: "Eis aus der Kühltruhe serviert kriegen", cost: 40, icon: "🍦" },
+
+    // --- UNTERHALTUNG & PRIVILEGIEN (Jetzt 20 Stück) ---
+    "s16": { id: "s16", title: "1 Abend freie Filmwahl", cost: 90, icon: "🎬" },
+    "s17": { id: "s17", title: "1 Tag kein Spülmaschinendienst", cost: 120, icon: "🍽️" },
+    "s18": { id: "s18", title: "10 Minuten Fußmassage beim Streamen", cost: 150, icon: "🦶" },
+    "s19": { id: "s19", title: "15 Minuten Rückenmassage", cost: 200, icon: "💆‍♂️" },
+    "s20": { id: "s20", title: "Wochenend-Essen bestellen bestimmen", cost: 100, icon: "🍕" },
+    "s21": { id: "s21", title: "Spieleabend-Wahl (Du bestimmst)", cost: 80, icon: "🎲" },
+    "s22": { id: "s22", title: "Der andere bringt den Müll weg", cost: 65, icon: "🗑️" },
+    "s23": { id: "s23", title: "Beim nächsten Streit 'Recht haben'", cost: 150, icon: "⚖️" },
+    "s24": { id: "s24", title: "Aufwendiges Lieblings-Frühstück gekocht kriegen", cost: 110, icon: "🥞" },
+    "s25": { id: "s25", title: "1 Tag komplett haushaltsfrei", cost: 180, icon: "🛌" },
+    "s26": { id: "s26", title: "Der andere schneidet dir die Haare / stylt dich", cost: 130, icon: "✂️" },
+    "s27": { id: "s27", title: "Playlist-Herrschaft im Auto für die nächste Fahrt", cost: 75, icon: "🚗" },
+    "s28": { id: "s28", title: "Der andere muss ein peinliches Kleidungsstück für 1 Stunde tragen", cost: 140, icon: "🤡" },
+    "s29": { id: "s29", title: "1 Abend lang die Konsolen-/PC-Herrschaft", cost: 100, icon: "🎮" },
+    "s30": { id: "s30", title: "Das Recht, das nächste Ausflugsziel komplett allein zu bestimmen", cost: 120, icon: "🗺️" },
+    "s31": { id: "s31", title: "Der andere muss dir ein süßes Kompliment machen", cost: 30, icon: "💬" },
+    "s32": { id: "s32", title: "Der andere liest dir eine Gute-Nacht-Geschichte vor", cost: 60, icon: "📖" },
+    "s33": { id: "s33", title: "Veto-Recht bei einer Serie (Folge wird übersprungen/nicht geguckt)", cost: 95, icon: "🚫" },
+    "s34": { id: "s34", title: "Der andere räumt den Tisch nach dem Essen allein ab", cost: 70, icon: "🧼" },
+    "s35": { id: "s35", title: "Der andere geht morgen früh Brötchen holen", cost: 100, icon: "🥐" },
+
+    // --- LUXUS & GROSSE SPARZIELE (Jetzt 15 Stück) ---
+    "s36": { id: "s36", title: "Wochenende ungestört ausschlafen", cost: 250, icon: "💤" },
+    "s37": { id: "s37", title: "3-Gänge-Lieblingsessen gekocht kriegen", cost: 350, icon: "🍔" },
+    "s38": { id: "s38", title: "Der andere macht Wocheneinkauf allein", cost: 400, icon: "🛒" },
+    "s39": { id: "s39", title: "Der andere putzt das Bad allein", cost: 300, icon: "🧼" },
+    "s40": { id: "s40", title: "Der andere bügelt deine Wäsche", cost: 350, icon: "👔" },
+    "s41": { id: "s41", title: "45 Minuten Wellness-Massage", cost: 500, icon: "🧴" },
+    "s42": { id: "s42", title: "Der andere reinigt das Auto komplett", cost: 450, icon: "🚗" },
+    "s43": { id: "s43", title: "Komplett bezahltes Überraschungs-Date", cost: 600, icon: "🌹" },
+    "s44": { id: "s44", title: "Der andere übernimmt Wochenaufgabe", cost: 280, icon: "📝" },
+    "s45": { id: "s45", title: "LEGENDÄR: Ein ganzes Verwöhn-Wochenende!", cost: 1000, icon: "👑" },
+    "s46": { id: "s46", title: "Der andere putzt alle Fenster der Wohnung ganz allein", cost: 550, icon: "🖼️" },
+    "s47": { id: "s47", title: "Ein Wunsch-Gegenstand im Wert von bis zu 20€ vom Partner spendiert", cost: 700, icon: "🎁" },
+    "s48": { id: "s48", title: "Der andere übernimmt für eine ganze Woche den Küchendienst", cost: 650, icon: "🍳" },
+    "s49": { id: "s49", title: "Der andere baut/repariert ein Möbelstück/Sache deiner Wahl", cost: 500, icon: "🛠️" },
+    "s50": { id: "s50", title: "EPISCH: 1 Woche lang absolute Immunität gegen alle Monats-Quests!", cost: 1200, icon: "🛡️" }
 };
 
 window.app = {
@@ -177,7 +224,6 @@ window.app = {
             const snapshot = await get(child(dbRef, `rooms/${roomId}`));
             if(snapshot.exists()) return alert("Raum existiert schon!");
             
-            // NEU: Boss HP (1000) & leere Trophäen beim Erstellen anlegen
             await set(ref(db, `rooms/${roomId}`), {
                 password: roomPass,
                 stats: { mini: 0, woche: 0, monat: 0, totalCleaned: 0, bossHp: 1000 },
@@ -185,7 +231,7 @@ window.app = {
                 shop: defaultShop,
                 achievements: { "king": false, "knight": false, "rich": false }
             });
-            alert("Cloud-Raum mit 100 Inhalten und Bossgegner generiert!");
+            alert("Cloud-Raum mit 140 Inhalten und Bossgegner generiert!");
         }
 
         const snapshot = await get(child(dbRef, `rooms/${roomId}`));
@@ -202,7 +248,7 @@ window.app = {
         const snapshot = await get(ref(db, `rooms/${currentRoomId}/players/${localUid}`));
         if(snapshot.exists()) {
             this.showScreen("main-game");
-            this.checkAndUpdateStreak(); // NEU: Streak beim Betreten berechnen
+            this.checkAndUpdateStreak();
             this.listenToRoomData();
         } else {
             this.showScreen("char-screen");
@@ -236,7 +282,6 @@ window.app = {
         this.listenToRoomData();
     },
 
-    // NEU: Streak Algorithmus
     checkAndUpdateStreak: async function() {
         const pRef = ref(db, `rooms/${currentRoomId}/players/${localUid}`);
         const snapshot = await get(pRef);
@@ -254,7 +299,7 @@ window.app = {
             if (p.lastLoginDate === yesterdayStr) {
                 p.streak = (p.streak || 0) + 1;
             } else {
-                p.streak = 1; // Unterbrochen, Reset auf 1
+                p.streak = 1;
             }
             p.lastLoginDate = todayStr;
             await set(pRef, p);
@@ -280,7 +325,6 @@ window.app = {
                 document.getElementById('next-level-xp').innerText = me.level * 100;
                 document.getElementById('player-streak').innerText = me.streak || 1;
                 
-                // Bonus-Multiplikator Text anzeigen
                 if(me.streak >= 3) {
                     document.getElementById('streak-bonus-text').innerText = "(+10% Gold Bonus!)";
                 } else {
@@ -290,13 +334,11 @@ window.app = {
         });
     },
 
-    // NEU: Das Schicksalsrad (Zufalls-Quest wählen)
     spinWheel: function() {
         playSound('buy');
         document.getElementById('wheel-btn').disabled = true;
         document.getElementById('wheel-result').innerText = "Wähle Quest...";
 
-        // Nur unvollständige Aufgaben zulassen
         get(ref(db, `rooms/${currentRoomId}/quests`)).then((snapshot) => {
             const questsList = Object.values(snapshot.val() || {}).filter(q => !q.completed);
             if(questsList.length === 0) {
@@ -311,7 +353,6 @@ window.app = {
             document.getElementById('wheel-result').innerText = `🎯 Ziel: ${randomQuest.icon} ${randomQuest.title}!`;
             this.showToast("Zufallschallenge gestartet!");
             
-            // Nach 15 Sekunden setzt sich der Button zurück (In Echtzeit für Präsentationszwecke verkürzt)
             setTimeout(() => {
                 document.getElementById('wheel-btn').disabled = false;
             }, 15000);
@@ -354,45 +395,38 @@ window.app = {
     completeQuest: async function(qId, type, reward) {
         playSound('success');
         
-        // 1. Spielerwerte updaten (inkl. Schicksalsrad und Streak-Prüfung)
         const pSnapshot = await get(ref(db, `rooms/${currentRoomId}/players/${localUid}`));
         let p = pSnapshot.val();
         
         let finalReward = reward;
         if (activeWheelQuestId === qId) {
-            finalReward = reward * 2; // Doppelter Wert durch Glücksrad
+            finalReward = reward * 2;
             activeWheelQuestId = null;
             document.getElementById('wheel-result').innerText = "";
             document.getElementById('wheel-btn').disabled = false;
         }
         
-        if (p.streak >= 3) finalReward = Math.round(finalReward * 1.1); // Streak-Bonus +10%
+        if (p.streak >= 3) finalReward = Math.round(finalReward * 1.1);
 
         p.gold += finalReward; p.xp += finalReward;
         if(p.xp >= p.level * 100) { p.xp -= p.level * 100; p.level++; this.showToast("LEVEL UP!"); }
         await set(ref(db, `rooms/${currentRoomId}/players/${localUid}`), p);
 
-        // 2. Sperren
         if(type !== 'mini') await update(ref(db, `rooms/${currentRoomId}/quests/${qId}`), { completed: true });
 
-        // 3. Stats & Boss-Schaden verrechnen
         const sSnapshot = await get(ref(db, `rooms/${currentRoomId}/stats`));
         let s = sSnapshot.val() || { mini: 0, woche: 0, monat: 0, totalCleaned: 0, bossHp: 1000 };
         s[type] = (s[type] || 0) + 1;
         s.totalCleaned = (s.totalCleaned || 0) + 1;
         
-        // Schaden an Boss (Mini: 5 HP, Woche: 25 HP, Monat: 70 HP)
         let damage = type === 'mini' ? 5 : (type === 'woche' ? 25 : 70);
         s.bossHp = Math.max((s.bossHp || 1000) - damage, 0);
         await set(ref(db, `rooms/${currentRoomId}/stats`), s);
         
-        // 4. Achievements validieren
         this.validateAchievements(s.mini, s.monat, p.gold);
-
         this.showToast(`Monster getroffen! +${finalReward} Gold`);
     },
 
-    // NEU: Achievement Check
     validateAchievements: async function(miniCount, monatCount, currentGold) {
         let updates = {};
         if(miniCount >= 50) updates["king"] = true;
@@ -424,19 +458,16 @@ window.app = {
     },
 
     renderStats: function(playersObj, statsObj, achObj) {
-        // Boss HP füllen
         let hp = statsObj.bossHp !== undefined ? statsObj.bossHp : 1000;
         let hpPercent = (hp / 1000) * 100;
         document.getElementById('boss-hp-fill').style.width = `${hpPercent}%`;
         document.getElementById('boss-hp-text').innerText = hp <= 0 ? "⚔️ BESIEGT! (+200 Gold Bonus)" : `${hp} / 1000 HP`;
 
-        // Monatsziel (50 Quests Skala)
         let total = (statsObj.mini || 0) + (statsObj.woche || 0) + (statsObj.monat || 0);
         let goalPercent = Math.min((total / 50) * 100, 100);
         document.getElementById('progress-goal-fill').style.width = `${goalPercent}%`;
         document.getElementById('progress-goal-text').innerText = `${total} / 50 Quests gelöst`;
 
-        // Trophäenbox rendern
         const achContainer = document.getElementById("achievements-list");
         achContainer.innerHTML = `
             <div>${achObj.king ? "👑" : "🔒"} <b>Müll-König</b> (50 Mini-Quests gelöst)</div>
@@ -444,7 +475,6 @@ window.app = {
             <div>${achObj.rich ? "💰" : "🔒"} <b>Großverdiener</b> (1500 Münzen auf dem Konto)</div>
         `;
 
-        // Balken Klassen
         let maxVal = Math.max(statsObj.mini || 0, statsObj.woche || 0, statsObj.monat || 0, 1);
         document.getElementById('bar-mini').style.width = `${((statsObj.mini||0)/maxVal)*100}%`;
         document.getElementById('stat-count-mini').innerText = statsObj.mini || 0;
@@ -453,7 +483,6 @@ window.app = {
         document.getElementById('bar-monat').style.width = `${((statsObj.monat||0)/maxVal)*100}%`;
         document.getElementById('stat-count-monat').innerText = statsObj.monat || 0;
 
-        // Versus Balken
         const pArray = Object.entries(playersObj);
         const labelContainer = document.getElementById("vs-label-container");
         if(pArray.length >= 1) {
