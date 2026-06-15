@@ -42,6 +42,15 @@ function playSound(type) {
     }
 }
 
+// Helfer: Ermittelt die aktuelle Kalenderwoche
+function getWeekNumber(d) {
+    d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+    var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+    var weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
+    return weekNo;
+}
+
 const defaultQuests = {
     // --- MINI-QUESTS (40 Stück) ---
     "q1": { id: "q1", title: "Müll runterbringen", type: "mini", reward: 4, icon: "🗑️" },
@@ -79,7 +88,7 @@ const defaultQuests = {
     "q33": { id: "q33", title: "Arbeitsplatte nach dem Kochen trockenwischen", type: "mini", reward: 3, icon: "🧽" },
     "q34": { id: "q34", title: "Leere Flaschen auf der Arbeitsplatte einsammeln", type: "mini", reward: 2, icon: "🍼" },
     "q35": { id: "q35", title: "Einen vollen Wäscheständer leerräumen", type: "mini", reward: 5, icon: "🧺" },
-    "q36": { id: "q36", title: "Zwei alte Prospekte/Kassenzettel wegwerfen", type: "mini", reward: 1, icon: "🧾" },
+    "q36": { id: "q36", title: "Zwei alte Prospekte wegwerfen", type: "mini", reward: 1, icon: "🧾" },
     "q37": { id: "q37", title: "Haare aus der Haarbürste entfernen", type: "mini", reward: 2, icon: "🪮" },
     "q38": { id: "q38", title: "Gewürzregal kurz gerade rücken", type: "mini", reward: 3, icon: "🧂" },
     "q39": { id: "q39", title: "Katzenspielzeug in die Box werfen", type: "mini", reward: 2, icon: "🐭" },
@@ -128,20 +137,19 @@ const defaultQuests = {
     "q78": { id: "q78", title: "Alle Klinken desinfizieren", type: "monat", reward: 30, icon: "🧽", completed: false },
     "q79": { id: "q79", title: "Waschmaschine Flusensieb säubern", type: "monat", reward: 45, icon: "🧼", completed: false },
     "q80": { id: "q80", title: "Heizkörper entstauben", type: "monat", reward: 30, icon: "♨️", completed: false },
-    "q81": { id: "q81", title: "Fußleisten in der Wohnung wischen", type: "monat", reward: 30, icon: "🧹", completed: false },
+    "q81": { id: "q81", title: "Fußleisten in der Wohnung wischen", type: "monat", reward: 55, icon: "🧹", completed: false },
     "q82": { id: "q82", title: "Dunstabzugshaube Filter reinigen", type: "monat", reward: 50, icon: "💨", completed: false },
     "q83": { id: "q83", title: "Duschvorhang waschen", type: "monat", reward: 35, icon: "🚿", completed: false },
     "q84": { id: "q84", title: "Vorratsschrank auswischen & MHD", type: "monat", reward: 45, icon: "🥫", completed: false },
     "q85": { id: "q85", title: "Kleiderschrank ausmisten & ordnen", type: "monat", reward: 60, icon: "👔", completed: false },
     "q86": { id: "q86", title: "Spiegelschrank im Bad wischen", type: "monat", reward: 40, icon: "🧴", completed: false },
     "q87": { id: "q87", title: "Lampenschirme & Leuchtmittel entstauben", type: "monat", reward: 35, icon: "💡", completed: false },
-    "q88": { id: "q88", title: "Unter dem Sofa staubsaugen", type: "monat", reward: 40, icon: "🛋️", completed: false },
-    "q89": { id: "q89", title: "Wohnungstür abwischen", type: "monat", reward: 25, icon: "🚪", completed: false },
-    "q90": { id: "q90", title: "Kellerraum fegen / ordnen", type: "monat", reward: 70, icon: "📦", completed: false }
+    "q88": { id: "q88", title: "Unter dem Sofa staubsaugen", type: "monat", reward: 50, icon: "🛋️", completed: false },
+    "q89": { id: "q89", title: "Wohnungstür abwischen", type: "monat", reward: 30, icon: "🚪", completed: false },
+    "q90": { id: "q90", title: "Kellerraum fegen / ordnen", type: "monat", reward: 65, icon: "📦", completed: false }
 };
 
 const defaultShop = {
-    // --- KLEINE GEFALLEN (15 Stück) ---
     "s1": { id: "s1", title: "Snack ans Sofa gebracht kriegen", cost: 40, icon: "🍿" },
     "s2": { id: "s2", title: "1x Kaffee fertig ans Bett gebracht", cost: 50, icon: "☕" },
     "s3": { id: "s3", title: "Joker: Eine Mini-Quest sofort abgeben", cost: 60, icon: "🃏" },
@@ -152,13 +160,11 @@ const defaultShop = {
     "s8": { id: "s8", title: "Der andere mixt dir ein Getränk", cost: 55, icon: "🍹" },
     "s9": { id: "s9", title: "Der andere holt das Ladekabel", cost: 25, icon: "🔌" },
     "s10": { id: "s10", title: "Ungestörtes Schaumbad nehmen", cost: 50, icon: "🛁" },
-    "s11": { id: "s11", title: "Der andere schüttelt deine Bettdecke auf", cost: 20, icon: "🛏️" },
+    "s11": { id: "s11", title: "Der andere schüttelt deine Decke auf", cost: 20, icon: "🛏️" },
     "s12": { id: "s12", title: "Kirschkernkissen gemacht kriegen", cost: 35, icon: "🔥" },
     "s13": { id: "s13", title: "Der andere lüftet das Zimmer", cost: 15, icon: "🪟" },
-    "s14": { id: "s14", title: "Ein Glas kaltes Wasser gebracht kriegen", cost: 15, icon: "🥛" },
+    "s14": { id: "s14", title: "Ein Glas Wasser gebracht kriegen", cost: 15, icon: "🥛" },
     "s15": { id: "s15", title: "Eis aus der Truhe serviert kriegen", cost: 40, icon: "🍦" },
-
-    // --- UNTERHALTUNG & PRIVILEGIEN (20 Stück) ---
     "s16": { id: "s16", title: "1 Abend freie Filmwahl", cost: 90, icon: "🎬" },
     "s17": { id: "s17", title: "1 Tag kein Spülmaschinendienst", cost: 120, icon: "🍽️" },
     "s18": { id: "s18", title: "10 Minuten Fußmassage beim Streamen", cost: 150, icon: "🦶" },
@@ -167,20 +173,18 @@ const defaultShop = {
     "s21": { id: "s21", title: "Spieleabend-Wahl (Du bestimmst)", cost: 80, icon: "🎲" },
     "s22": { id: "s22", title: "Der andere bringt den Müll weg", cost: 65, icon: "🗑️" },
     "s23": { id: "s23", title: "Beim nächsten Streit 'Recht haben'", cost: 150, icon: "⚖️" },
-    "s24": { id: "s24", title: "Aufwendiges Lieblings-Frühstück gekocht kriegen", cost: 110, icon: "🥞" },
+    "s24": { id: "s24", title: "Lieblings-Frühstück gekocht kriegen", cost: 110, icon: "🥞" },
     "s25": { id: "s25", title: "1 Tag komplett haushaltsfrei", cost: 180, icon: "🛌" },
-    "s26": { id: "s26", title: "Der andere stylt / schneidet deine Haare", cost: 130, icon: "✂️" },
+    "s26": { id: "s26", title: "Der andere schneidet deine Haare", cost: 130, icon: "✂️" },
     "s27": { id: "s27", title: "Playlist-Herrschaft im Auto", cost: 75, icon: "🚗" },
     "s28": { id: "s28", title: "Der andere trägt 1h ein Clowns-Outfit", cost: 140, icon: "🤡" },
-    "s29": { id: "s29", title: "1 Abend lang die PC-/Konsolen-Herrschaft", cost: 100, icon: "🎮" },
+    "s29": { id: "s29", title: "1 Abend lang die Konsolen-Herrschaft", cost: 100, icon: "🎮" },
     "s30": { id: "s30", title: "Nächstes Ausflugsziel bestimmen", cost: 120, icon: "🗺️" },
-    "s31": { id: "s31", title: "Ein ehrliches, süßes Kompliment kriegen", cost: 30, icon: "💬" },
-    "s32": { id: "s32", title: "Eine Gute-Nacht-Geschichte vorgelesen kriegen", cost: 60, icon: "📖" },
+    "s31": { id: "s31", title: "Ein ehrliches Kompliment kriegen", cost: 30, icon: "💬" },
+    "s32": { id: "s32", title: "Gute-Nacht-Geschichte vorgelesen kriegen", cost: 60, icon: "📖" },
     "s33": { id: "s33", title: "Veto-Recht bei einer Serienfolge", cost: 95, icon: "🚫" },
     "s34": { id: "s34", title: "Der andere räumt den Tisch allein ab", cost: 70, icon: "🧼" },
     "s35": { id: "s35", title: "Der andere holt morgen Brötchen", cost: 100, icon: "🥐" },
-
-    // --- LUXUS & GROSSE SPARZIELE (15 Stück) ---
     "s36": { id: "s36", title: "Wochenende ungestört ausschlafen", cost: 250, icon: "💤" },
     "s37": { id: "s37", title: "3-Gänge-Lieblingsessen gekocht kriegen", cost: 350, icon: "🍔" },
     "s38": { id: "s38", title: "Der andere macht Wocheneinkauf allein", cost: 400, icon: "🛒" },
@@ -192,45 +196,67 @@ const defaultShop = {
     "s44": { id: "s44", title: "Der andere übernimmt Wochenaufgabe", cost: 280, icon: "📝" },
     "s45": { id: "s45", title: "LEGENDÄR: Ein ganzes Verwöhn-Wochenende!", cost: 1000, icon: "👑" },
     "s46": { id: "s46", title: "Der andere putzt alle Fenster allein", cost: 550, icon: "🖼️" },
-    "s47": { id: "s47", title: "Ein Wunsch-Geschenk bis zu 20€ spendiert kriegen", cost: 700, icon: "🎁" },
-    "s48": { id: "s48", title: "1 Woche lang kompletter Küchendienst vom Partner", cost: 650, icon: "🍳" },
-    "s49": { id: "s49", title: "Der andere repariert/baut ein Möbelstück deiner Wahl", cost: 500, icon: "🛠️" },
-    "s50": { id: "s50", title: "🛡️ IMMUNITÄT: 1 Woche befreit von Monats-Quests!", cost: 1200, icon: "🛡️" }
+    "s47": { id: "s47", title: "Wunsch-Geschenk bis zu 20€ spendiert kriegen", cost: 700, icon: "🎁" },
+    "s48": { id: "s48", title: "1 Woche Küchendienst vom Partner", cost: 650, icon: "🍳" },
+    "s49": { id: "s49", title: "Der andere repariert ein Möbelstück", cost: 500, icon: "🛠️" },
+    "s50": { id: "s50", title: "🛡️ IMMUNITÄT: 1 Woche haushaltsfrei!", cost: 1200, icon: "🛡️" }
 };
 
 window.app = {
+    // 1. NEU: AUTO-LOGIN STRATEGIE (Liest lokalen Speicher aus)
+    initAutoLogin: function() {
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                localUid = user.uid;
+                const savedRoomId = localStorage.getItem("h_room_id");
+                if (savedRoomId) {
+                    currentRoomId = savedRoomId;
+                    this.showScreen("main-game");
+                    await this.checkAndUpdateStreak();
+                    await this.checkAndTriggerTimeResets(); // Resets validieren!
+                    this.listenToRoomData();
+                } else { this.showScreen("room-screen"); }
+            } else { localUid = null; this.showScreen("auth-screen"); }
+        });
+    },
+
     handleAuth: async function(type) {
         const email = document.getElementById("auth-email").value.trim();
         const password = document.getElementById("auth-password").value.trim();
-        if(!email || !password) return alert("Bitte alle Felder ausfüllen!");
+        if(!email || !password) return alert("Felder ausfüllen!");
         try {
-            if(type === 'register') {
-                await createUserWithEmailAndPassword(auth, email, password);
-                alert("Account erstellt!");
-            } else { await signInWithEmailAndPassword(auth, email, password); }
+            if(type === 'register') { await createUserWithEmailAndPassword(auth, email, password); alert("Account erstellt!"); }
+            else { await signInWithEmailAndPassword(auth, email, password); }
         } catch (error) { alert("Fehler: " + error.message); }
     },
 
-    logout: function() { signOut(auth); },
+    logout: function() {
+        localStorage.removeItem("h_room_id");
+        signOut(auth);
+    },
 
     handleRoom: async function(type) {
         const roomId = document.getElementById("room-id").value.trim().replace(/[^a-zA-Z0-9]/g, "");
         const roomPass = document.getElementById("room-password").value.trim();
-        if(!roomId || !roomPass) return alert("Bitte Raum-ID und Passwort eingeben!");
+        if(!roomId || !roomPass) return alert("Daten unvollständig!");
 
         const dbRef = ref(db);
         if(type === 'create') {
             const snapshot = await get(child(dbRef, `rooms/${roomId}`));
             if(snapshot.exists()) return alert("Raum existiert schon!");
             
+            // Zeitstempel für Cooldown Tracking mitspeichern
+            const now = new Date();
             await set(ref(db, `rooms/${roomId}`), {
                 password: roomPass,
                 stats: { mini: 0, woche: 0, monat: 0, totalCleaned: 0, bossHp: 1000 },
                 quests: defaultQuests,
                 shop: defaultShop,
-                achievements: { "king": false, "knight": false, "rich": false }
+                achievements: { "king": false, "knight": false, "rich": false },
+                lastResetWeek: getWeekNumber(now),
+                lastResetMonth: now.getMonth()
             });
-            alert("Cloud-Raum erfolgreich generiert!");
+            alert("Raum generiert!");
         }
 
         const snapshot = await get(child(dbRef, `rooms/${roomId}`));
@@ -238,10 +264,53 @@ window.app = {
         if(snapshot.val().password !== roomPass) return alert("Falsches Passwort!");
 
         currentRoomId = roomId;
+        localStorage.setItem("h_room_id", roomId); // Raum-ID merken!
         this.checkPlayerProfile();
     },
 
-    leaveRoom: function() { currentRoomId = null; this.showScreen("room-screen"); },
+    // 2. NEU: DER COOLDOWN-AUTOMATISMUS (Wochen- & Monats-Reset)
+    checkAndTriggerTimeResets: async function() {
+        const roomSnapshot = await get(ref(db, `rooms/${currentRoomId}`));
+        if(!roomSnapshot.exists()) return;
+        const roomData = roomSnapshot.val();
+
+        const now = new Date();
+        const currentWeek = getWeekNumber(now);
+        const currentMonth = now.getMonth();
+
+        let updates = {};
+        let needsUpdate = false;
+
+        // A) Wochen-Reset (Quests freischalten)
+        if (roomData.lastResetWeek !== currentWeek) {
+            Object.keys(roomData.quests).forEach(qKey => {
+                if (roomData.quests[qKey].type === 'woche') {
+                    updates[`quests/${qKey}/completed`] = false;
+                }
+            });
+            updates["lastResetWeek"] = currentWeek;
+            needsUpdate = true;
+        }
+
+        // B) Monats-Reset (Quests freischalten & Boss wiederbeleben)
+        if (roomData.lastResetMonth !== currentMonth) {
+            Object.keys(roomData.quests).forEach(qKey => {
+                if (roomData.quests[qKey].type === 'monat') {
+                    updates[`quests/${qKey}/completed`] = false;
+                }
+            });
+            updates["stats/bossHp"] = 1000; // Drache regeneriert sich!
+            updates["lastResetMonth"] = currentMonth;
+            needsUpdate = true;
+        }
+
+        if (needsUpdate) {
+            await update(ref(db, `rooms/${currentRoomId}`), updates);
+            this.showToast("⏳ Ein neuer Zyklus hat begonnen! Quests wurden zurückgesetzt.");
+        }
+    },
+
+    leaveRoom: function() { localStorage.removeItem("h_room_id"); currentRoomId = null; this.showScreen("room-screen"); },
 
     checkPlayerProfile: async function() {
         const snapshot = await get(ref(db, `rooms/${currentRoomId}/players/${localUid}`));
@@ -249,10 +318,7 @@ window.app = {
             this.showScreen("main-game");
             this.checkAndUpdateStreak();
             this.listenToRoomData();
-        } else {
-            this.showScreen("char-screen");
-            this.buildAvatarGrid();
-        }
+        } else { this.showScreen("char-screen"); this.buildAvatarGrid(); }
     },
 
     buildAvatarGrid: function() {
@@ -275,7 +341,8 @@ window.app = {
         const todayStr = new Date().toDateString();
         await set(ref(db, `rooms/${currentRoomId}/players/${localUid}`), {
             name: name, avatar: selectedAvatarIcon, gold: 0, xp: 0, level: 1,
-            streak: 1, lastLoginDate: todayStr
+            streak: 1, lastLoginDate: todayStr,
+            wheelClaimsToday: 0, wheelRerollsToday: 0, lastWheelDate: todayStr // Für Rad-Limits
         });
         this.showScreen("main-game");
         this.listenToRoomData();
@@ -283,23 +350,14 @@ window.app = {
 
     checkAndUpdateStreak: async function() {
         const pRef = ref(db, `rooms/${currentRoomId}/players/${localUid}`);
-        const snapshot = await get(pRef);
-        if(!snapshot.exists()) return;
+        const snapshot = await get(pRef); if(!snapshot.exists()) return;
         let p = snapshot.val();
-        
-        const today = new Date();
-        const todayStr = today.toDateString();
+        const todayStr = new Date().toDateString();
         
         if (p.lastLoginDate !== todayStr) {
-            const yesterday = new Date();
-            yesterday.setDate(today.getDate() - 1);
-            const yesterdayStr = yesterday.toDateString();
-            
-            if (p.lastLoginDate === yesterdayStr) {
-                p.streak = (p.streak || 0) + 1;
-            } else {
-                p.streak = 1;
-            }
+            const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+            if (p.lastLoginDate === yesterday.toDateString()) { p.streak = (p.streak || 0) + 1; } 
+            else { p.streak = 1; }
             p.lastLoginDate = todayStr;
             await set(pRef, p);
         }
@@ -308,8 +366,7 @@ window.app = {
     listenToRoomData: function() {
         if(!currentRoomId) return;
         onValue(ref(db, `rooms/${currentRoomId}`), (snapshot) => {
-            const data = snapshot.val();
-            if(!data) return;
+            const data = snapshot.val(); if(!data) return;
             this.renderQuests(data.quests || {});
             this.renderShop(data.shop || {});
             this.renderStats(data.players || {}, data.stats || {}, data.achievements || {});
@@ -323,58 +380,64 @@ window.app = {
                 document.getElementById('player-level').innerText = me.level;
                 document.getElementById('next-level-xp').innerText = me.level * 100;
                 document.getElementById('player-streak').innerText = me.streak || 1;
-                
-                if(me.streak >= 3) {
-                    document.getElementById('streak-bonus-text').innerText = "(+10% Gold Bonus!)";
-                } else {
-                    document.getElementById('streak-bonus-text').innerText = "";
-                }
+                document.getElementById('streak-bonus-text').innerText = me.streak >= 3 ? "(+10% Gold Bonus!)" : "";
+
+                // 3. NEU: Rad-Limits im Interface anzeigen
+                const todayStr = new Date().toDateString();
+                let claims = me.lastWheelDate === todayStr ? (me.wheelClaimsToday || 0) : 0;
+                let rerolls = me.lastWheelDate === todayStr ? (me.wheelRerollsToday || 0) : 0;
+                document.getElementById("wheel-left-count").innerText = `${3 - claims} / 3`;
+                document.getElementById("wheel-rerolls-count").innerText = `${3 - rerolls} / 3`;
             }
         });
     },
 
-    // 🎲 DAS ERWEITERTE SCHICKSALSRAD (Mit Neu-Würfeln und Direkt-Erledigen)
-    spinWheel: function() {
+    // 3. NEU: LIMITIERTES SCHICKSALSRAD
+    spinWheel: async function() {
+        const pRef = ref(db, `rooms/${currentRoomId}/players/${localUid}`);
+        const pSnapshot = await get(pRef);
+        let p = pSnapshot.val();
+
+        const todayStr = new Date().toDateString();
+        if (p.lastWheelDate !== todayStr) { p.wheelClaimsToday = 0; p.wheelRerollsToday = 0; p.lastWheelDate = todayStr; }
+
+        if ((p.wheelClaimsToday || 0) >= 3) { playSound('fail'); return alert("Du hast heute bereits 3 Glücksrad-Quests gelöst! Warte bis morgen."); }
+
         playSound('buy');
         const wheelBtn = document.getElementById('wheel-btn');
         const wheelResult = document.getElementById('wheel-result');
-        
         wheelBtn.disabled = true;
         wheelResult.innerHTML = "Wähle Quest...";
 
-        get(ref(db, `rooms/${currentRoomId}/quests`)).then((snapshot) => {
+        get(ref(db, `rooms/${currentRoomId}/quests`)).then(async (snapshot) => {
             const questsList = Object.values(snapshot.val() || {}).filter(q => !q.completed);
-            if(questsList.length === 0) {
-                wheelResult.innerHTML = "Alle Quests geschafft!";
-                wheelBtn.disabled = false;
-                return;
-            }
+            if(questsList.length === 0) { wheelResult.innerHTML = "Alle Quests geschafft!"; wheelBtn.disabled = false; return; }
             
             const randomQuest = questsList[Math.floor(Math.random() * questsList.length)];
             activeWheelQuestId = randomQuest.id;
             
+            let rerollBtnHtml = `<button class="btn" style="margin:0; background:#444; flex:1; font-size:18px;" onclick="app.rerollWheel()">🔄 Passt nicht (${3 - (p.wheelRerollsToday || 0)} Rerolls)</button>`;
+            if ((p.wheelRerollsToday || 0) >= 3) {
+                rerollBtnHtml = `<button class="btn disabled-btn" style="margin:0; flex:1; font-size:16px;" disabled>Keine Rerolls mehr</button>`;
+            }
+
             wheelResult.innerHTML = `
                 <div style="margin: 15px 0; padding: 10px; background: #222230; border: 2px dashed var(--pixel-accent);">
-                    <span style="font-size: 24px; display: block; margin-bottom: 10px;">
-                        🎯 Ziel: ${randomQuest.icon} ${randomQuest.title}
-                    </span>
+                    <span style="font-size: 24px; display: block; margin-bottom: 10px;">🎯 Ziel: ${randomQuest.icon} ${randomQuest.title}</span>
                     <div style="display: flex; gap: 10px;">
-                        <button class="btn btn-green" style="margin: 0; flex: 1;" 
-                                onclick="app.completeQuest('${randomQuest.id}', '${randomQuest.type}', ${randomQuest.reward})">
-                            Hier direkt abgeben!
-                        </button>
-                        <button class="btn" style="margin: 0; background: #444; flex: 1; font-size: 18px;" 
-                                onclick="app.rerollWheel()">
-                            🔄 Passt nicht (Neu)
-                        </button>
+                        <button class="btn btn-green" style="margin: 0; flex: 1;" onclick="app.completeQuest('${randomQuest.id}', '${randomQuest.type}', ${randomQuest.reward})">Hier direkt abgeben!</button>
+                        ${rerollBtnHtml}
                     </div>
-                </div>
-            `;
-            this.showToast("Herausforderung bereit!");
+                </div>`;
+            await set(pRef, p);
         });
     },
 
-    rerollWheel: function() {
+    rerollWheel: async function() {
+        const pRef = ref(db, `rooms/${currentRoomId}/players/${localUid}`);
+        const pSnapshot = await get(pRef); let p = pSnapshot.val();
+        p.wheelRerollsToday = (p.wheelRerollsToday || 0) + 1;
+        await set(pRef, p);
         activeWheelQuestId = null;
         this.spinWheel();
     },
@@ -383,51 +446,39 @@ window.app = {
         const container = document.getElementById("quest-list"); container.innerHTML = "";
         Object.values(questsObj).forEach(quest => {
             if(currentFilter !== 'all' && quest.type !== currentFilter) return;
-            const card = document.createElement('div');
-            card.className = 'card' + (quest.completed ? ' completed-quest' : '');
-            
+            const card = document.createElement('div'); card.className = 'card' + (quest.completed ? ' completed-quest' : '');
             let btnHtml = `<button class="btn btn-green" onclick="app.completeQuest('${quest.id}', '${quest.type}', ${quest.reward})">Erledigt</button>`;
             let cdHtml = "";
             if(quest.completed) {
                 btnHtml = `<button class="btn disabled-btn" disabled>✔ Safe</button>`;
                 cdHtml = `<span class="cooldown-text">Wieder da: ${quest.type === 'woche' ? 'nächsten Montag' : 'zum 1.'}</span>`;
             }
-
             card.innerHTML = `
                 <div class="card-info">
                     <div class="card-title">${quest.icon} ${quest.title}</div>
-                    <div class="card-reward">+${quest.reward} Münzen/EP ${activeWheelQuestId === quest.id ? '<span style="color:var(--pixel-accent);">(Joker Aktiv!)</span>' : ''}</div>
+                    <div class="card-reward">+${quest.reward} Münzen ${activeWheelQuestId === quest.id ? '<span style="color:var(--pixel-accent);">(Joker!)</span>' : ''}</div>
                     ${cdHtml}
-                </div>
-                <div class="card-action">${btnHtml}</div>
-            `;
+                </div><div class="card-action">${btnHtml}</div>`;
             container.appendChild(card);
         });
     },
 
-    filterQuests: function(type) {
-        currentFilter = type;
-        document.querySelectorAll('.filter-bar .btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(`f-${type}`).classList.add('active');
-        this.listenToRoomData();
-    },
+    filterQuests: function(type) { currentFilter = type; document.querySelectorAll('.filter-bar .btn').forEach(b => b.classList.remove('active')); document.getElementById(`f-${type}`).classList.add('active'); this.listenToRoomData(); },
 
     completeQuest: async function(qId, type, reward) {
         playSound('success');
-        
         const pSnapshot = await get(ref(db, `rooms/${currentRoomId}/players/${localUid}`));
         let p = pSnapshot.val();
         
         let finalReward = reward;
         if (activeWheelQuestId === qId) {
-            finalReward = reward * 2;
-            activeWheelQuestId = null;
+            finalReward = reward * 2; activeWheelQuestId = null;
             document.getElementById('wheel-result').innerHTML = "";
             document.getElementById('wheel-btn').disabled = false;
+            p.wheelClaimsToday = (p.wheelClaimsToday || 0) + 1; // Counter für erfolgreiche Radaufgaben hochzählen
         }
         
         if (p.streak >= 3) finalReward = Math.round(finalReward * 1.1);
-
         p.gold += finalReward; p.xp += finalReward;
         if(p.xp >= p.level * 100) { p.xp -= p.level * 100; p.level++; this.showToast("LEVEL UP!"); }
         await set(ref(db, `rooms/${currentRoomId}/players/${localUid}`), p);
@@ -436,25 +487,19 @@ window.app = {
 
         const sSnapshot = await get(ref(db, `rooms/${currentRoomId}/stats`));
         let s = sSnapshot.val() || { mini: 0, woche: 0, monat: 0, totalCleaned: 0, bossHp: 1000 };
-        s[type] = (s[type] || 0) + 1;
-        s.totalCleaned = (s.totalCleaned || 0) + 1;
-        
+        s[type] = (s[type] || 0) + 1; s.totalCleaned = (s.totalCleaned || 0) + 1;
         let damage = type === 'mini' ? 5 : (type === 'woche' ? 25 : 70);
         s.bossHp = Math.max((s.bossHp || 1000) - damage, 0);
         await set(ref(db, `rooms/${currentRoomId}/stats`), s);
         
         this.validateAchievements(s.mini, s.monat, p.gold);
-        this.showToast(`Monster getroffen! +${finalReward} Gold`);
+        this.showToast(`Quest geschafft! +${finalReward} Gold`);
     },
 
     validateAchievements: async function(miniCount, monatCount, currentGold) {
         let updates = {};
-        if(miniCount >= 50) updates["king"] = true;
-        if(monatCount >= 5) updates["knight"] = true;
-        if(currentGold >= 1500) updates["rich"] = true;
-        if(Object.keys(updates).length > 0) {
-            await update(ref(db, `rooms/${currentRoomId}/achievements`), updates);
-        }
+        if(miniCount >= 50) updates["king"] = true; if(monatCount >= 5) updates["knight"] = true; if(currentGold >= 1500) updates["rich"] = true;
+        if(Object.keys(updates).length > 0) await update(ref(db, `rooms/${currentRoomId}/achievements`), updates);
     },
 
     renderShop: function(shopObj) {
@@ -463,25 +508,39 @@ window.app = {
             const card = document.createElement('div'); card.className = 'card';
             card.innerHTML = `
                 <div class="card-info"><div class="card-title">${item.icon} ${item.title}</div><div class="card-cost">Kosten: 🪙 ${item.cost}</div></div>
-                <div class="card-action"><button class="btn" style="background:#d32f2f;" onclick="app.buyItem(${item.cost}, '${item.title}')">Einlösen</button></div>
-            `;
+                <div class="card-action"><button class="btn" style="background:#d32f2f;" onclick="app.buyItem(${item.cost}, '${item.title}', '${item.icon}')">Kaufen</button></div>`;
             container.appendChild(card);
         });
     },
 
-    buyItem: async function(cost, title) {
+    // 4. NEU: DAS INVENTAR SYSTEM (Schreibt gekaufte Gutscheine dem Partner gut)
+    buyItem: async function(cost, title, icon) {
         const pRef = ref(db, `rooms/${currentRoomId}/players/${localUid}`);
         const pSnapshot = await get(pRef); let p = pSnapshot.val();
         if (p.gold >= cost) {
-            playSound('buy'); p.gold -= cost; await set(pRef, p); this.showToast(`Eingelöst: ${title}!`);
+            playSound('buy'); p.gold -= cost; await set(pRef, p);
+
+            // Gutschein generieren und in die Raum-Cloud schieben
+            const invKey = "inv_" + Date.now();
+            await set(ref(db, `rooms/${currentRoomId}/inventory/${invKey}`), {
+                id: invKey, title: title, icon: icon, ownerName: p.name, ownerUid: localUid
+            });
+            this.showToast(`Gutschein gesichert! Liegt im Inventar.`);
         } else { playSound('fail'); this.showToast("Zu wenig Münzen!"); }
+    },
+
+    // Gutschein aus Inventar löschen (wird vom Partner geklickt)
+    claimInventoryItem: async function(invKey) {
+        playSound('success');
+        await set(ref(db, `rooms/${currentRoomId}/inventory/${invKey}`), null);
+        this.showToast("Gutschein erfolgreich eingelöst!");
     },
 
     renderStats: function(playersObj, statsObj, achObj) {
         let hp = statsObj.bossHp !== undefined ? statsObj.bossHp : 1000;
         let hpPercent = (hp / 1000) * 100;
         document.getElementById('boss-hp-fill').style.width = `${hpPercent}%`;
-        document.getElementById('boss-hp-text').innerText = hp <= 0 ? "⚔️ BESIEGT! (+200 Gold Bonus)" : `${hp} / 1000 HP`;
+        document.getElementById('boss-hp-text').innerText = hp <= 0 ? "⚔️ BESIEGT!" : `${hp} / 1000 HP`;
 
         let total = (statsObj.mini || 0) + (statsObj.woche || 0) + (statsObj.monat || 0);
         let goalPercent = Math.min((total / 50) * 100, 100);
@@ -490,21 +549,44 @@ window.app = {
 
         const achContainer = document.getElementById("achievements-list");
         achContainer.innerHTML = `
-            <div>${achObj.king ? "👑" : "🔒"} <b>Müll-König</b> (50 Mini-Quests gelöst)</div>
-            <div>${achObj.knight ? "⚔️" : "🔒"} <b>Sanitär-Ritter</b> (5 Monats-Quests gemeistert)</div>
-            <div>${achObj.rich ? "💰" : "🔒"} <b>Großverdiener</b> (1500 Münzen auf dem Konto)</div>
-        `;
+            <div>${achObj.king ? "👑" : "🔒"} <b>Müll-König</b> (50 Mini)</div>
+            <div>${achObj.knight ? "⚔️" : "🔒"} <b>Sanitär-Ritter</b> (5 Monat)</div>
+            <div>${achObj.rich ? "💰" : "🔒"} <b>Großverdiener</b> (1500 Münzen)</div>`;
+
+        // 4. NEU: Das Inventar live zeichnen
+        get(ref(db, `rooms/${currentRoomId}/inventory`)).then((invSnapshot) => {
+            const invContainer = document.getElementById("inventory-list");
+            invContainer.innerHTML = "";
+            const invData = invSnapshot.val();
+            if(!invData) { invContainer.innerHTML = '<div style="color:#777; text-align:center;">Keine offenen Gutscheine vorrätig.</div>'; return; }
+            
+            Object.values(invData).forEach(item => {
+                const row = document.createElement("div");
+                row.className = "card";
+                row.style.borderColor = "var(--pixel-blue)";
+                
+                // Wer hat es gekauft?
+                let actionBtnHtml = `<button class="btn btn-green" style="margin:0; font-size:16px; padding:4px;" onclick="app.claimInventoryItem('${item.id}')">Gefallen einfordern!</button>`;
+                if (item.ownerUid === localUid) {
+                    actionBtnHtml = `<span style="font-size:16px; color:#666;">Wartet auf Partner</span>`;
+                }
+
+                row.innerHTML = `
+                    <div class="card-info">
+                        <div class="card-title" style="font-size:20px;">${item.icon} ${item.title}</div>
+                        <div style="font-size:14px; color:#aaa;">Gekauft von: ${item.ownerName}</div>
+                    </div>
+                    <div class="card-action" style="min-width:130px;">${actionBtnHtml}</div>`;
+                invContainer.appendChild(row);
+            });
+        });
 
         let maxVal = Math.max(statsObj.mini || 0, statsObj.woche || 0, statsObj.monat || 0, 1);
-        document.getElementById('bar-mini').style.width = `${((statsObj.mini||0)/maxVal)*100}%`;
-        document.getElementById('stat-count-mini').innerText = statsObj.mini || 0;
-        document.getElementById('bar-woche').style.width = `${((statsObj.woche||0)/maxVal)*100}%`;
-        document.getElementById('stat-count-woche').innerText = statsObj.woche || 0;
-        document.getElementById('bar-monat').style.width = `${((statsObj.monat||0)/maxVal)*100}%`;
-        document.getElementById('stat-count-monat').innerText = statsObj.monat || 0;
+        document.getElementById('bar-mini').style.width = `${((statsObj.mini||0)/maxVal)*100}%`; document.getElementById('stat-count-mini').innerText = statsObj.mini || 0;
+        document.getElementById('bar-woche').style.width = `${((statsObj.woche||0)/maxVal)*100}%`; document.getElementById('stat-count-woche').innerText = statsObj.woche || 0;
+        document.getElementById('bar-monat').style.width = `${((statsObj.monat||0)/maxVal)*100}%`; document.getElementById('stat-count-monat').innerText = statsObj.monat || 0;
 
-        const pArray = Object.entries(playersObj);
-        const labelContainer = document.getElementById("vs-label-container");
+        const pArray = Object.entries(playersObj); const labelContainer = document.getElementById("vs-label-container");
         if(pArray.length >= 1) {
             let totalXp = 0; let p1Total = pArray[0][1].xp + (pArray[0][1].level-1)*100;
             pArray.forEach(p => { totalXp += p[1].xp + (p[1].level-1)*100; });
@@ -517,49 +599,23 @@ window.app = {
     },
 
     adminAddQuest: async function() {
-        const title = document.getElementById("admin-q-title").value.trim();
-        const icon = document.getElementById("admin-q-icon").value.trim() || "✨";
-        const type = document.getElementById("admin-q-type").value;
-        const reward = parseInt(document.getElementById("admin-q-reward").value);
-        if(!title || !reward) return alert("Fehler!");
-        const newKey = "q_" + Date.now();
-        const newQuest = { id: newKey, title: title, type: type, reward: reward, icon: icon };
-        if(type !== 'mini') newQuest.completed = false;
-        await set(ref(db, `rooms/${currentRoomId}/quests/${newKey}`), newQuest);
-        this.showToast("Quest gespeichert!");
-        document.getElementById("admin-q-title").value = ""; document.getElementById("admin-q-reward").value = "";
+        const title = document.getElementById("admin-q-title").value.trim(); const icon = document.getElementById("admin-q-icon").value.trim() || "✨"; const type = document.getElementById("admin-q-type").value; const reward = parseInt(document.getElementById("admin-q-reward").value);
+        if(!title || !reward) return alert("Fehler!"); const newKey = "q_" + Date.now(); const newQuest = { id: newKey, title: title, type: type, reward: reward, icon: icon }; if(type !== 'mini') newQuest.completed = false;
+        await set(ref(db, `rooms/${currentRoomId}/quests/${newKey}`), newQuest); this.showToast("Quest gespeichert!"); document.getElementById("admin-q-title").value = ""; document.getElementById("admin-q-reward").value = "";
     },
 
     adminAddShopItem: async function() {
-        const title = document.getElementById("admin-s-title").value.trim();
-        const icon = document.getElementById("admin-s-icon").value.trim() || "🪙";
-        const cost = parseInt(document.getElementById("admin-s-cost").value);
-        if(!title || !cost) return alert("Fehler!");
-        const newKey = "s_" + Date.now();
-        await set(ref(db, `rooms/${currentRoomId}/shop/${newKey}`), { id: newKey, title: title, cost: cost, icon: icon });
-        this.showToast("Shop-Item gespeichert!");
-        document.getElementById("admin-s-title").value = ""; document.getElementById("admin-s-cost").value = "";
+        const title = document.getElementById("admin-s-title").value.trim(); const icon = document.getElementById("admin-s-icon").value.trim() || "🪙"; const cost = parseInt(document.getElementById("admin-s-cost").value);
+        if(!title || !cost) return alert("Fehler!"); const newKey = "s_" + Date.now(); await set(ref(db, `rooms/${currentRoomId}/shop/${newKey}`), { id: newKey, title: title, cost: cost, icon: icon }); this.showToast("Shop-Item gespeichert!"); document.getElementById("admin-s-title").value = ""; document.getElementById("admin-s-cost").value = "";
     },
 
     switchTab: function(tab) {
-        document.querySelectorAll('.list-section').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(`section-${tab}`).classList.add('active');
-        if(tab !== 'admin') document.getElementById(`tab-${tab}`).classList.add('active');
+        document.querySelectorAll('.list-section').forEach(s => s.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById(`section-${tab}`).classList.add('active'); if(tab !== 'admin') document.getElementById(`tab-${tab}`).classList.add('active');
     },
 
-    showScreen: function(id) {
-        document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-        document.getElementById(id).classList.add("active");
-    },
-
-    showToast: function(text) {
-        const toast = document.getElementById('toast'); toast.innerText = text; toast.style.display = 'block';
-        setTimeout(() => { toast.style.display = 'none'; }, 2500);
-    }
+    showScreen: function(id) { document.querySelectorAll(".screen").forEach(s => s.classList.remove("active")); document.getElementById(id).classList.add("active"); },
+    showToast: function(text) { const toast = document.getElementById('toast'); toast.innerText = text; toast.style.display = 'block'; setTimeout(() => { toast.style.display = 'none'; }, 2500); }
 };
 
-onAuthStateChanged(auth, (user) => {
-    if (user) { localUid = user.uid; if(!currentRoomId) app.showScreen("room-screen"); } 
-    else { localUid = null; app.showScreen("auth-screen"); }
-});
+// Startet den Auto-Login Prozess direkt beim Laden der Webseite
+app.initAutoLogin();
