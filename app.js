@@ -22,6 +22,7 @@ let currentRoomId = null;
 let currentFilter = "all";
 let localUid = null;
 let activeWheelQuestId = null;
+let searchQuery = "";
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 function playSound(type) {
@@ -42,7 +43,6 @@ function playSound(type) {
     }
 }
 
-// Helfer: Ermittelt die aktuelle Kalenderwoche
 function getWeekNumber(d) {
     d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
     d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
@@ -171,7 +171,7 @@ const defaultShop = {
     "s19": { id: "s19", title: "15 Minuten Rückenmassage", cost: 200, icon: "💆‍♂️" },
     "s20": { id: "s20", title: "Wochenend-Essen bestellen bestimmen", cost: 100, icon: "🍕" },
     "s21": { id: "s21", title: "Spieleabend-Wahl (Du bestimmst)", cost: 80, icon: "🎲" },
-    "s22": { id: "s22", title: "Der andere bringt den Müll weg", cost: 65, icon: "🗑️" },
+    "s22": { id: "s22", title: "Der andere brings den Müll weg", cost: 65, icon: "🗑️" },
     "s23": { id: "s23", title: "Beim nächsten Streit 'Recht haben'", cost: 150, icon: "⚖️" },
     "s24": { id: "s24", title: "Lieblings-Frühstück gekocht kriegen", cost: 110, icon: "🥞" },
     "s25": { id: "s25", title: "1 Tag komplett haushaltsfrei", cost: 180, icon: "🛌" },
@@ -203,7 +203,6 @@ const defaultShop = {
 };
 
 window.app = {
-    // 1. NEU: AUTO-LOGIN STRATEGIE (Liest lokalen Speicher aus)
     initAutoLogin: function() {
         onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -213,7 +212,7 @@ window.app = {
                     currentRoomId = savedRoomId;
                     this.showScreen("main-game");
                     await this.checkAndUpdateStreak();
-                    await this.checkAndTriggerTimeResets(); // Resets validieren!
+                    await this.checkAndTriggerTimeResets();
                     this.listenToRoomData();
                 } else { this.showScreen("room-screen"); }
             } else { localUid = null; this.showScreen("auth-screen"); }
@@ -245,7 +244,6 @@ window.app = {
             const snapshot = await get(child(dbRef, `rooms/${roomId}`));
             if(snapshot.exists()) return alert("Raum existiert schon!");
             
-            // Zeitstempel für Cooldown Tracking mitspeichern
             const now = new Date();
             await set(ref(db, `rooms/${roomId}`), {
                 password: roomPass,
@@ -264,11 +262,10 @@ window.app = {
         if(snapshot.val().password !== roomPass) return alert("Falsches Passwort!");
 
         currentRoomId = roomId;
-        localStorage.setItem("h_room_id", roomId); // Raum-ID merken!
+        localStorage.setItem("h_room_id", roomId);
         this.checkPlayerProfile();
     },
 
-    // 2. NEU: DER COOLDOWN-AUTOMATISMUS (Wochen- & Monats-Reset)
     checkAndTriggerTimeResets: async function() {
         const roomSnapshot = await get(ref(db, `rooms/${currentRoomId}`));
         if(!roomSnapshot.exists()) return;
@@ -281,7 +278,6 @@ window.app = {
         let updates = {};
         let needsUpdate = false;
 
-        // A) Wochen-Reset (Quests freischalten)
         if (roomData.lastResetWeek !== currentWeek) {
             Object.keys(roomData.quests).forEach(qKey => {
                 if (roomData.quests[qKey].type === 'woche') {
@@ -292,21 +288,20 @@ window.app = {
             needsUpdate = true;
         }
 
-        // B) Monats-Reset (Quests freischalten & Boss wiederbeleben)
         if (roomData.lastResetMonth !== currentMonth) {
             Object.keys(roomData.quests).forEach(qKey => {
                 if (roomData.quests[qKey].type === 'monat') {
                     updates[`quests/${qKey}/completed`] = false;
                 }
             });
-            updates["stats/bossHp"] = 1000; // Drache regeneriert sich!
+            updates["stats/bossHp"] = 1000;
             updates["lastResetMonth"] = currentMonth;
             needsUpdate = true;
         }
 
         if (needsUpdate) {
             await update(ref(db, `rooms/${currentRoomId}`), updates);
-            this.showToast("⏳ Ein neuer Zyklus hat begonnen! Quests wurden zurückgesetzt.");
+            this.showToast("⏳ Ein neuer Zyklus hat begonnen!");
         }
     },
 
@@ -342,7 +337,7 @@ window.app = {
         await set(ref(db, `rooms/${currentRoomId}/players/${localUid}`), {
             name: name, avatar: selectedAvatarIcon, gold: 0, xp: 0, level: 1,
             streak: 1, lastLoginDate: todayStr,
-            wheelClaimsToday: 0, wheelRerollsToday: 0, lastWheelDate: todayStr // Für Rad-Limits
+            wheelClaimsToday: 0, wheelRerollsToday: 0, lastWheelDate: todayStr
         });
         this.showScreen("main-game");
         this.listenToRoomData();
@@ -371,7 +366,17 @@ window.app = {
             this.renderShop(data.shop || {});
             this.renderStats(data.players || {}, data.stats || {}, data.achievements || {});
             
-            const me = data.players[localUid];
+            // --- NEU: DYNAMISCHER MULTIPLAYER DATA SYNC FÜR DAS DUO-DASHBOARD ---
+            const pEntries = Object.entries(data.players || {});
+            let me = null;
+            let partner = null;
+
+            pEntries.forEach(([uid, profile]) => {
+                if (uid === localUid) { me = profile; } 
+                else { partner = profile; }
+            });
+
+            // 1. Eigene Werte ins linke Dashboard schreiben
             if(me) {
                 document.getElementById('display-name').innerText = me.name;
                 document.getElementById('display-avatar').innerText = me.avatar;
@@ -381,8 +386,25 @@ window.app = {
                 document.getElementById('next-level-xp').innerText = me.level * 100;
                 document.getElementById('player-streak').innerText = me.streak || 1;
                 document.getElementById('streak-bonus-text').innerText = me.streak >= 3 ? "(+10% Gold Bonus!)" : "";
+            }
 
-                // 3. NEU: Rad-Limits im Interface anzeigen
+            // 2. Partner-Werte ins rechte Dashboard schreiben (falls beigetreten)
+            if(partner) {
+                document.getElementById('partner-name').innerText = partner.name;
+                document.getElementById('partner-avatar').innerText = partner.avatar;
+                document.getElementById('partner-gold').innerText = partner.gold;
+                document.getElementById('partner-xp').innerText = partner.xp;
+                document.getElementById('partner-level').innerText = partner.level;
+                document.getElementById('partner-next-xp').innerText = partner.level * 100;
+                document.getElementById('partner-streak').innerText = partner.streak || 1;
+            } else {
+                // Ausweichtext, wenn man noch alleine im Raum ist
+                document.getElementById('partner-name').innerText = "Warten...";
+                document.getElementById('partner-avatar').innerText = "❓";
+            }
+
+            // Schicksalsrad Anzeige
+            if(me) {
                 const todayStr = new Date().toDateString();
                 let claims = me.lastWheelDate === todayStr ? (me.wheelClaimsToday || 0) : 0;
                 let rerolls = me.lastWheelDate === todayStr ? (me.wheelRerollsToday || 0) : 0;
@@ -392,16 +414,18 @@ window.app = {
         });
     },
 
-    // 3. NEU: LIMITIERTES SCHICKSALSRAD
+    handleSearch: function() {
+        searchQuery = document.getElementById("quest-search").value.toLowerCase().trim();
+        this.listenToRoomData();
+    },
+
     spinWheel: async function() {
         const pRef = ref(db, `rooms/${currentRoomId}/players/${localUid}`);
         const pSnapshot = await get(pRef);
         let p = pSnapshot.val();
-
         const todayStr = new Date().toDateString();
         if (p.lastWheelDate !== todayStr) { p.wheelClaimsToday = 0; p.wheelRerollsToday = 0; p.lastWheelDate = todayStr; }
-
-        if ((p.wheelClaimsToday || 0) >= 3) { playSound('fail'); return alert("Du hast heute bereits 3 Glücksrad-Quests gelöst! Warte bis morgen."); }
+        if ((p.wheelClaimsToday || 0) >= 3) { playSound('fail'); return alert("Limit erreicht!"); }
 
         playSound('buy');
         const wheelBtn = document.getElementById('wheel-btn');
@@ -446,6 +470,8 @@ window.app = {
         const container = document.getElementById("quest-list"); container.innerHTML = "";
         Object.values(questsObj).forEach(quest => {
             if(currentFilter !== 'all' && quest.type !== currentFilter) return;
+            if(searchQuery !== "" && !quest.title.toLowerCase().includes(searchQuery)) return;
+
             const card = document.createElement('div'); card.className = 'card' + (quest.completed ? ' completed-quest' : '');
             let btnHtml = `<button class="btn btn-green" onclick="app.completeQuest('${quest.id}', '${quest.type}', ${quest.reward})">Erledigt</button>`;
             let cdHtml = "";
@@ -475,7 +501,7 @@ window.app = {
             finalReward = reward * 2; activeWheelQuestId = null;
             document.getElementById('wheel-result').innerHTML = "";
             document.getElementById('wheel-btn').disabled = false;
-            p.wheelClaimsToday = (p.wheelClaimsToday || 0) + 1; // Counter für erfolgreiche Radaufgaben hochzählen
+            p.wheelClaimsToday = (p.wheelClaimsToday || 0) + 1;
         }
         
         if (p.streak >= 3) finalReward = Math.round(finalReward * 1.1);
@@ -513,27 +539,24 @@ window.app = {
         });
     },
 
-    // 4. NEU: DAS INVENTAR SYSTEM (Schreibt gekaufte Gutscheine dem Partner gut)
     buyItem: async function(cost, title, icon) {
         const pRef = ref(db, `rooms/${currentRoomId}/players/${localUid}`);
         const pSnapshot = await get(pRef); let p = pSnapshot.val();
         if (p.gold >= cost) {
             playSound('buy'); p.gold -= cost; await set(pRef, p);
 
-            // Gutschein generieren und in die Raum-Cloud schieben
             const invKey = "inv_" + Date.now();
             await set(ref(db, `rooms/${currentRoomId}/inventory/${invKey}`), {
                 id: invKey, title: title, icon: icon, ownerName: p.name, ownerUid: localUid
             });
-            this.showToast(`Gutschein gesichert! Liegt im Inventar.`);
+            this.showToast(`Gutschein gesichert!`);
         } else { playSound('fail'); this.showToast("Zu wenig Münzen!"); }
     },
 
-    // Gutschein aus Inventar löschen (wird vom Partner geklickt)
     claimInventoryItem: async function(invKey) {
         playSound('success');
         await set(ref(db, `rooms/${currentRoomId}/inventory/${invKey}`), null);
-        this.showToast("Gutschein erfolgreich eingelöst!");
+        this.showToast("Gutschein eingelöst!");
     },
 
     renderStats: function(playersObj, statsObj, achObj) {
@@ -553,7 +576,6 @@ window.app = {
             <div>${achObj.knight ? "⚔️" : "🔒"} <b>Sanitär-Ritter</b> (5 Monat)</div>
             <div>${achObj.rich ? "💰" : "🔒"} <b>Großverdiener</b> (1500 Münzen)</div>`;
 
-        // 4. NEU: Das Inventar live zeichnen
         get(ref(db, `rooms/${currentRoomId}/inventory`)).then((invSnapshot) => {
             const invContainer = document.getElementById("inventory-list");
             invContainer.innerHTML = "";
@@ -561,22 +583,14 @@ window.app = {
             if(!invData) { invContainer.innerHTML = '<div style="color:#777; text-align:center;">Keine offenen Gutscheine vorrätig.</div>'; return; }
             
             Object.values(invData).forEach(item => {
-                const row = document.createElement("div");
-                row.className = "card";
-                row.style.borderColor = "var(--pixel-blue)";
-                
-                // Wer hat es gekauft?
+                const row = document.createElement("div"); row.className = "card"; row.style.borderColor = "var(--pixel-blue)";
                 let actionBtnHtml = `<button class="btn btn-green" style="margin:0; font-size:16px; padding:4px;" onclick="app.claimInventoryItem('${item.id}')">Gefallen einfordern!</button>`;
-                if (item.ownerUid === localUid) {
-                    actionBtnHtml = `<span style="font-size:16px; color:#666;">Wartet auf Partner</span>`;
-                }
-
+                if (item.ownerUid === localUid) { actionBtnHtml = `<span style="font-size:16px; color:#666;">Wartet auf Partner</span>`; }
                 row.innerHTML = `
                     <div class="card-info">
                         <div class="card-title" style="font-size:20px;">${item.icon} ${item.title}</div>
                         <div style="font-size:14px; color:#aaa;">Gekauft von: ${item.ownerName}</div>
-                    </div>
-                    <div class="card-action" style="min-width:130px;">${actionBtnHtml}</div>`;
+                    </div><div class="card-action" style="min-width:130px;">${actionBtnHtml}</div>`;
                 invContainer.appendChild(row);
             });
         });
@@ -617,5 +631,4 @@ window.app = {
     showToast: function(text) { const toast = document.getElementById('toast'); toast.innerText = text; toast.style.display = 'block'; setTimeout(() => { toast.style.display = 'none'; }, 2500); }
 };
 
-// Startet den Auto-Login Prozess direkt beim Laden der Webseite
 app.initAutoLogin();
