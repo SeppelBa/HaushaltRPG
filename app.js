@@ -167,8 +167,8 @@ const defaultShop = {
     "s15": { id: "s15", title: "Eis aus der Truhe serviert kriegen", cost: 40, icon: "🍦" },
     "s16": { id: "s16", title: "1 Abend freie Filmwahl", cost: 90, icon: "🎬" },
     "s17": { id: "s17", title: "1 Tag kein Spülmaschinendienst", cost: 120, icon: "🍽️" },
-    "s18": { id: "s18", title: "10 Minuten Fußmassage beim Streamen", cost: 150, icon: "🦶" },
-    "s19": { id: "s19", title: "15 Minuten Rückenmassage", cost: 200, icon: "💆‍♂️" },
+    "s18": { id: "s18", title: "5 Minuten Fußmassage beim Streamen", cost: 150, icon: "🦶" },
+    "s19": { id: "s19", title: "5 Minuten Rückenmassage", cost: 200, icon: "💆‍♂️" },
     "s20": { id: "s20", title: "Wochenend-Essen bestellen bestimmen", cost: 100, icon: "🍕" },
     "s21": { id: "s21", title: "Spieleabend-Wahl (Du bestimmst)", cost: 80, icon: "🎲" },
     "s22": { id: "s22", title: "Der andere brings den Müll weg", cost: 65, icon: "🗑️" },
@@ -190,7 +190,7 @@ const defaultShop = {
     "s38": { id: "s38", title: "Der andere macht Wocheneinkauf allein", cost: 400, icon: "🛒" },
     "s39": { id: "s39", title: "Der andere putzt das Bad allein", cost: 300, icon: "🧼" },
     "s40": { id: "s40", title: "Der andere bügelt deine Wäsche", cost: 350, icon: "👔" },
-    "s41": { id: "s41", title: "45 Minuten Wellness-Massage", cost: 500, icon: "🧴" },
+    "s41": { id: "s41", title: "30 Minuten Wellness-Massage", cost: 1100, icon: "🧴" },
     "s42": { id: "s42", title: "Der andere reinigt das Auto komplett", cost: 450, icon: "🚗" },
     "s43": { id: "s43", title: "Komplett bezahltes Überraschungs-Date", cost: 600, icon: "🌹" },
     "s44": { id: "s44", title: "Der andere übernimmt Wochenaufgabe", cost: 280, icon: "📝" },
@@ -358,25 +358,32 @@ window.app = {
         }
     },
 
+    // ⚡ FIX: Dieser Echtzeit-Listener feuert jetzt extrem zuverlässig bei JEDER Datenänderung im Raum!
     listenToRoomData: function() {
         if(!currentRoomId) return;
         onValue(ref(db, `rooms/${currentRoomId}`), (snapshot) => {
             const data = snapshot.val(); if(!data) return;
+            
+            // 1. Listen rendern
             this.renderQuests(data.quests || {});
             this.renderShop(data.shop || {});
             this.renderStats(data.players || {}, data.stats || {}, data.achievements || {});
             
-            // --- NEU: DYNAMISCHER MULTIPLAYER DATA SYNC FÜR DAS DUO-DASHBOARD ---
-            const pEntries = Object.entries(data.players || {});
-            let me = null;
+            // 2. Geteiltes Multiplayer-Dashboard komplett live neu aufbauen
+            const players = data.players || {};
+            const pUids = Object.keys(players);
+            
+            let me = players[localUid] || null;
             let partner = null;
 
-            pEntries.forEach(([uid, profile]) => {
-                if (uid === localUid) { me = profile; } 
-                else { partner = profile; }
+            // Finde die UID, die nicht die eigene ist
+            pUids.forEach(uid => {
+                if (uid !== localUid) {
+                    partner = players[uid];
+                }
             });
 
-            // 1. Eigene Werte ins linke Dashboard schreiben
+            // Eigenes Profil links spiegeln
             if(me) {
                 document.getElementById('display-name').innerText = me.name;
                 document.getElementById('display-avatar').innerText = me.avatar;
@@ -386,9 +393,16 @@ window.app = {
                 document.getElementById('next-level-xp').innerText = me.level * 100;
                 document.getElementById('player-streak').innerText = me.streak || 1;
                 document.getElementById('streak-bonus-text').innerText = me.streak >= 3 ? "(+10% Gold Bonus!)" : "";
+                
+                // Schicksalsrad-Werte
+                const todayStr = new Date().toDateString();
+                let claims = me.lastWheelDate === todayStr ? (me.wheelClaimsToday || 0) : 0;
+                let rerolls = me.lastWheelDate === todayStr ? (me.wheelRerollsToday || 0) : 0;
+                document.getElementById("wheel-left-count").innerText = `${3 - claims} / 3`;
+                document.getElementById("wheel-rerolls-count").innerText = `${3 - rerolls} / 3`;
             }
 
-            // 2. Partner-Werte ins rechte Dashboard schreiben (falls beigetreten)
+            // Partner-Profil rechts spiegeln (Wird jetzt SOFORT gezeichnet, sobald das andere Handy speichert)
             if(partner) {
                 document.getElementById('partner-name').innerText = partner.name;
                 document.getElementById('partner-avatar').innerText = partner.avatar;
@@ -398,18 +412,12 @@ window.app = {
                 document.getElementById('partner-next-xp').innerText = partner.level * 100;
                 document.getElementById('partner-streak').innerText = partner.streak || 1;
             } else {
-                // Ausweichtext, wenn man noch alleine im Raum ist
                 document.getElementById('partner-name').innerText = "Warten...";
                 document.getElementById('partner-avatar').innerText = "❓";
-            }
-
-            // Schicksalsrad Anzeige
-            if(me) {
-                const todayStr = new Date().toDateString();
-                let claims = me.lastWheelDate === todayStr ? (me.wheelClaimsToday || 0) : 0;
-                let rerolls = me.lastWheelDate === todayStr ? (me.wheelRerollsToday || 0) : 0;
-                document.getElementById("wheel-left-count").innerText = `${3 - claims} / 3`;
-                document.getElementById("wheel-rerolls-count").innerText = `${3 - rerolls} / 3`;
+                document.getElementById('partner-gold').innerText = "0";
+                document.getElementById('partner-xp').innerText = "0";
+                document.getElementById('partner-level').innerText = "0";
+                document.getElementById('partner-streak').innerText = "0";
             }
         });
     },
